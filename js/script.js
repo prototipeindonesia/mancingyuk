@@ -1141,4 +1141,195 @@ function processPayment() {
 
         // Update poin
         if (currentUser) {
-            if (bookingData.points
+            if (bookingData.pointsUsed > 0) currentUser.points -= bookingData.pointsUsed;
+            currentUser.points += Math.floor(bookingData.total / 1000);
+        }
+
+        // Notifikasi
+        notifications.unshift({ id: Date.now(), title: "Booking Berhasil", msg: `Tiket ${bookingData.spot.name} aktif`, time: "Baru saja", read: false });
+
+        // Owner booking
+        ownerBookings.unshift({ id: `B-${Date.now()}`, customer: currentUser.name, spot: bookingData.spot.name, date: fmtDate, qty: bookingData.qty, total: finalTotal, status: "Pending" });
+
+        save();
+        updateNotifBadge();
+
+        document.getElementById('ticketDetails').innerHTML = `
+            <div class="flex justify-between mb-1"><span>ID</span><span class="font-semibold text-dark">${newTicket.id}</span></div>
+            <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${newTicket.spotName}</span></div>
+            <div class="flex justify-between mb-1"><span>Tanggal</span><span class="font-semibold text-dark">${newTicket.date}</span></div>
+            <div class="flex justify-between mb-1"><span>Jumlah</span><span class="font-semibold text-dark">${newTicket.qty} Orang</span></div>
+            ${bookingData.pointsUsed > 0 ? `<div class="flex justify-between text-green-600"><span>Poin Terpakai</span><span>${bookingData.pointsUsed}</span></div>` : ''}
+            <div class="flex justify-between border-t pt-2 mt-2"><span>Total Bayar</span><span class="font-bold text-primary">Rp ${newTicket.total.toLocaleString('id-ID')}</span></div>
+            <div class="mt-4 pt-4 border-t text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-xl mx-auto flex items-center justify-center">
+                    <svg class="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 15h6v6H3v-6zm2 2v2h2v-2H5zm10-2h4v2h-2v2h2v2h-4v-2h-2v2h-2v-4h2v-2h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/></svg>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2">QR Code</p>
+            </div>
+        `;
+        document.getElementById('successModal').classList.remove('hidden');
+        document.getElementById('successModal').classList.add('flex');
+    }, 1200);
+}
+
+function closeSuccess(toHome = false) {
+    document.getElementById('successModal').classList.add('hidden');
+    document.getElementById('successModal').classList.remove('flex');
+    if (toHome) switchTab('home');
+    else switchTab('tickets');
+}
+
+// ==========================================
+// REVIEW
+// ==========================================
+let reviewIndex = -1;
+function openReviewFor(index) {
+    reviewIndex = index;
+    tempRating = 5;
+    updateStars();
+    document.getElementById('reviewText').value = '';
+    document.getElementById('reviewModal').classList.remove('hidden');
+    document.getElementById('reviewModal').classList.add('flex');
+}
+function closeReview() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    document.getElementById('reviewModal').classList.remove('flex');
+}
+function setRating(n) { tempRating = n; updateStars(); }
+function updateStars() {
+    document.querySelectorAll('#starRating button').forEach((btn, i) => btn.style.color = i < tempRating ? '#f59e0b' : '#d1d5db');
+}
+function submitReview() {
+    if (!currentUser) { closeReview(); return openAuth(); }
+    if (reviewIndex >= 0) {
+        userTickets[reviewIndex].reviewed = true;
+        const s = spots.find(sp => sp.id === userTickets[reviewIndex].spotId);
+        if (s) { s.rating = parseFloat(((s.rating * s.reviews + tempRating) / (s.reviews + 1)).toFixed(1)); s.reviews += 1; }
+        if (currentUser) currentUser.points += 50;
+    }
+    save();
+    closeReview();
+    showToast(`Review ${tempRating}★ terkirim! +50 poin`);
+    renderTickets(document.getElementById('app-content'));
+}
+
+// ==========================================
+// NOTIFIKASI
+// ==========================================
+function openNotifications() {
+    if (!currentUser) return openAuth();
+    const modal = document.getElementById('notifModal');
+    document.getElementById('notifContent').innerHTML = `
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Notifikasi</h3>
+            <div class="flex gap-2">
+                <button onclick="markAllRead()" class="text-xs text-primary font-semibold">Tandai Semua</button>
+                <button onclick="closeNotif()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+        </div>
+        <div class="space-y-3">
+            ${notifications.length === 0 ? '<p class="text-center text-gray-400 text-sm py-10">Tidak ada notifikasi</p>' :
+                notifications.map(n => `<div class="p-3 rounded-xl border ${n.read ? 'border-gray-100 bg-white' : 'border-blue-100 bg-blue-50'}"><div class="flex justify-between items-start mb-1"><h4 class="font-bold text-sm ${n.read ? 'text-dark' : 'text-primary'}">${n.title}</h4>${!n.read ? '<span class="w-2 h-2 bg-primary rounded-full"></span>' : ''}</div><p class="text-xs text-gray-600">${n.msg}</p><p class="text-[10px] text-gray-400 mt-1">${n.time}</p></div>`).join('')}
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+function markAllRead() {
+    notifications.forEach(n => n.read = true);
+    save(); updateNotifBadge(); openNotifications();
+    showToast('Semua notifikasi dibaca', 'info');
+}
+function updateNotifBadge() {
+    const unread = notifications.filter(n => !n.read).length;
+    const b = document.getElementById('notifBadge');
+    if (unread > 0) { b.textContent = unread; b.style.display = 'flex'; }
+    else b.style.display = 'none';
+}
+
+// ==========================================
+// PROFILE EDIT
+// ==========================================
+function openEditProfile() {
+    document.getElementById('editName').value = currentUser.name;
+    document.getElementById('editEmail').value = currentUser.email;
+    document.getElementById('editBio').value = currentUser.bio || '';
+    document.getElementById('editProfileModal').classList.remove('hidden');
+    document.getElementById('editProfileModal').classList.add('flex');
+}
+function closeEditProfile() {
+    document.getElementById('editProfileModal').classList.add('hidden');
+    document.getElementById('editProfileModal').classList.remove('flex');
+}
+function saveProfile() {
+    currentUser.name = document.getElementById('editName').value;
+    currentUser.email = document.getElementById('editEmail').value;
+    currentUser.bio = document.getElementById('editBio').value;
+    save(); closeEditProfile();
+    showToast('Profil diperbarui');
+    renderProfile(document.getElementById('app-content'));
+}
+function openPassword() {
+    document.getElementById('oldPass').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('passwordModal').classList.remove('hidden');
+    document.getElementById('passwordModal').classList.add('flex');
+}
+function closePassword() {
+    document.getElementById('passwordModal').classList.add('hidden');
+    document.getElementById('passwordModal').classList.remove('flex');
+}
+function savePassword() {
+    const o = document.getElementById('oldPass').value, n = document.getElementById('newPass').value;
+    if (!o || !n) return showToast('Semua field harus diisi', 'error');
+    if (n.length < 6) return showToast('Minimal 6 karakter', 'error');
+    closePassword();
+    showToast('Password diubah');
+}
+function showHistory() {
+    const total = userTickets.length;
+    const spent = userTickets.filter(t => t.status !== 'Dibatalkan').reduce((s, t) => s + t.total, 0);
+    alert(`📜 Riwayat Transaksi\n\nTotal Transaksi: ${total}\nTotal Belanja: Rp ${spent.toLocaleString('id-ID')}\nPoin Terkumpul: ${currentUser.points.toLocaleString('id-ID')}`);
+}
+
+// ==========================================
+// ABOUT
+// ==========================================
+function openAbout() {
+    document.getElementById('aboutModal').classList.remove('hidden');
+    document.getElementById('aboutModal').classList.add('flex');
+}
+function closeAbout() {
+    document.getElementById('aboutModal').classList.add('hidden');
+    document.getElementById('aboutModal').classList.remove('flex');
+}
+
+// ==========================================
+// INVITE
+// ==========================================
+function inviteFriend() {
+    if (!currentUser) return openAuth();
+    currentUser.points = (currentUser.points || 0) + 200;
+    save();
+    const text = `Ayo mancing bareng di MancingYuk! 🎣\nCari spot & booking di aplikasi MancingYuk!\nhttps://mancingyuk.app/invite/${(currentUser?.name || 'user').replace(/\s/g, '').toLowerCase()}`;
+    if (navigator.share) navigator.share({ title: 'MancingYuk!', text }).catch(() => fallbackCopy(text));
+    else fallbackCopy(text);
+    showToast('Link terkirim! +200 poin');
+}
+
+function fallbackCopy(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('Link tersalin!')).catch(() => showToast('Link: mancingyuk.app/invite', 'info'));
+    } else showToast('Link: mancingyuk.app/invite', 'info');
+}
+
+// ==========================================
+// INIT
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    updateNotifBadge();
+    if (!currentUser) openAuth();
+    else switchTab('home');
+});
