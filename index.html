@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MancingYuk! - Cari Spot. Ajak Teman. Booking. Mancing!</title>
+    
+    <!-- Tailwind CSS CDN untuk styling cepat dan profesional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Konfigurasi Tailwind untuk warna kustom -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0ea5e9', // Biru laut
+                        secondary: '#22c55e', // Hijau alam
+                        accent: '#f59e0b', // Kuning/Orange aksi
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <!-- Logo Ikan Sederhana -->
+                <svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                <h1 class="text-2xl font-bold text-gray-800">Mancing<span class="text-primary">Yuk!</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6 font-semibold">
+                <a href="#home" class="hover:text-primary transition">Home</a>
+                <a href="#cara-kerja" class="hover:text-primary transition">Cara Kerja</a>
+                <a href="#spot" class="hover:text-primary transition">Cari Spot</a>
+            </div>
+            <button class="bg-primary text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-600 transition shadow-lg">
+                Login / Daftar
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="home" class="relative bg-blue-900 text-white">
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Fishing Background" class="w-full h-full object-cover opacity-40">
+        </div>
+        <div class="relative container mx-auto px-4 py-24 md:py-32 text-center">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 drop-shadow-lg">Mancing<span class="text-accent">Yuk!</span></h1>
+            <p class="text-xl md:text-2xl mb-8 font-light drop-shadow-md">"Pemancing senang, Tempat pemancingan ramai, Ekosistem mancing berkembang."</p>
+            <p class="text-lg mb-10 max-w-2xl mx-auto">Platform untuk membuat lebih banyak orang mancing. Cari spot terdekat, ajak teman, dan booking tempat mancing favoritmu!</p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-2xl mx-auto bg-white rounded-full p-2 flex items-center shadow-2xl">
+                <svg class="w-6 h-6 text-gray-400 ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="searchInput" placeholder="Cari pemancingan terdekat, jenis ikan, atau kota..." class="w-full px-4 py-3 text-gray-800 focus:outline-none rounded-full">
+                <button onclick="searchSpots()" class="bg-accent text-white px-8 py-3 rounded-full font-bold hover:bg-yellow-600 transition">Cari Spot</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cara Kerja Section -->
+    <section id="cara-kerja" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-4">Bagaimana Cara Kerjanya?</h2>
+            <p class="text-center text-gray-500 mb-12">Hanya butuh 4 langkah mudah untuk memulai petualangan mancing Anda.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Step 1 -->
+                <div class="text-center p-6 bg-gray-50 rounded-2xl hover:shadow-lg transition">
+                    <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+                    <h3 class="font-bold text-lg mb-2">Pemancing mencari tempat</h3>
+                    <p class="text-gray-600 text-sm">Lihat lokasi, harga, jenis ikan, rating, dan ketersediaan slot.</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="text-center p-6 bg-gray-50 rounded-2xl hover:shadow-lg transition">
+                    <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+                    <h3 class="font-bold text-lg mb-2">Booking & Pembayaran</h3>
+                    <p class="text-gray-600 text-sm">Pilih tanggal, jumlah orang, dan lakukan pembayaran dengan aman.</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="text-center p-6 bg-gray-50 rounded-2xl hover:shadow-lg transition">
+                    <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+                    <h3 class="font-bold text-lg mb-2">Datang & Mancing</h3>
+                    <p class="text-gray-600 text-sm">Nikmati pengalaman mancing dengan mudah dan nyaman.</p>
+                </div>
+                <!-- Step 4 -->
+                <div class="text-center p-6 bg-gray-50 rounded-2xl hover:shadow-lg transition">
+                    <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">4</div>
+                    <h3 class="font-bold text-lg mb-2">Review & Ajak Teman</h3>
+                    <p class="text-gray-600 text-sm">Berikan ulasan dan ajak teman untuk mancing bersama.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Daftar Spot Section -->
+    <section id="spot" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-end mb-10">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Spot Mancing Populer</h2>
+                    <p class="text-gray-500">Temukan tempat mancing terbaik di sekitarmu.</p>
+                </div>
+                <a href="#" class="text-primary font-semibold hover:underline hidden md:block">Lihat Semua &rarr;</a>
+            </div>
+
+            <!-- Grid Spot -->
+            <div id="spotContainer" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Kartu Spot akan di-render oleh JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Booking -->
+    <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 relative animate-fade-in">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 class="text-2xl font-bold mb-4">Booking Spot</h3>
+            <p id="modalSpotName" class="text-gray-600 mb-6 font-semibold"></p>
+            
+            <form id="bookingForm" onsubmit="submitBooking(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mancing</label>
+                    <input type="date" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Orang</label>
+                    <input type="number" min="1" max="10" value="2" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Total Harga</label>
+                    <p id="modalTotalPrice" class="text-2xl font-bold text-primary"></p>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-blue-600 transition">Konfirmasi Booking</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-10">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold mb-4">Mancing<span class="text-accent">Yuk!</span></h2>
+            <p class="text-gray-400 mb-6">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
+            <div class="flex justify-center space-x-6 text-gray-400">
+                <a href="#" class="hover:text-white transition">Tentang Kami</a>
+                <a href="#" class="hover:text-white transition">Kebijakan Privasi</a>
+                <a href="#" class="hover:text-white transition">Kontak</a>
+            </div>
+            <p class="text-gray-500 text-sm mt-8">&copy; 2023 MancingYuk! Prototype. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+</body>
+</html>
