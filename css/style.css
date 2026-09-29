@@ -2,12 +2,13 @@
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 #detailModal.show, #notifModal.show, #ticketDetailModal.show,
-#eventModal.show, #ownerSpotModal.show { display: block; }
+#eventModal.show, #ownerSpotModal.show, #catchLogModal.show { display: block; }
 #detailModal.show #detailContent,
 #notifModal.show #notifContent,
 #ticketDetailModal.show #ticketDetailContent,
 #eventModal.show #eventContent,
-#ownerSpotModal.show #ownerSpotContent { transform: translateY(0); }
+#ownerSpotModal.show #ownerSpotContent,
+#catchLogModal.show #catchLogContent { transform: translateY(0); }
 
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
@@ -18,7 +19,40 @@
 @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
 .heart-pop { animation: heartPop 0.3s ease-out; }
 
-body { overflow: hidden; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.float-anim { animation: float 3s ease-in-out infinite; }
+
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } }
+.pulse-glow { animation: pulse-glow 2s infinite; }
+
+@keyframes chatIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.chat-in { animation: chatIn 0.3s ease-out; }
+
+body { overflow: hidden; transition: background 0.3s; }
+
+/* DARK MODE */
+body.dark-mode { background: #0f172a; }
+body.dark-mode #phoneFrame { background: #1e293b !important; }
+body.dark-mode header,
+body.dark-mode nav,
+body.dark-mode .bg-white { background: #1e293b !important; }
+body.dark-mode .bg-gray-50 { background: #0f172a !important; }
+body.dark-mode .bg-gray-100 { background: #334155 !important; }
+body.dark-mode .text-dark { color: #f1f5f9 !important; }
+body.dark-mode .text-gray-500 { color: #94a3b8 !important; }
+body.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+body.dark-mode .text-gray-400 { color: #64748b !important; }
+body.dark-mode .border-gray-100,
+body.dark-mode .border-gray-200 { border-color: #334155 !important; }
+body.dark-mode main { background: #0f172a !important; }
+body.dark-mode .bg-blue-50 { background: #1e3a5f !important; }
+body.dark-mode #detailContent,
+body.dark-mode #notifContent,
+body.dark-mode #ticketDetailContent,
+body.dark-mode #eventContent,
+body.dark-mode #ownerSpotContent,
+body.dark-mode #catchLogContent { background: #1e293b !important; }
+body.dark-mode #chatModal { background: #0f172a !important; }
 
 #toastContainer { position: absolute; top: 0; left: 0; right: 0; z-index: 200; pointer-events: none; padding: 0 16px; }
 .toast { pointer-events: auto; margin-top: 60px; background: #1e293b; color: white; padding: 12px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; margin-bottom: 8px; }
