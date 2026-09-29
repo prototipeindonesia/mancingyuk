@@ -1,75 +1,174 @@
 // ==========================================
-// 1. DATA DUMMY (Sesuai Infografis)
+// 1. DATA DUMMY (Lebih Banyak & Detail)
 // ==========================================
 const spots = [
     {
         id: 1,
         name: "Pemancingan Pak Budi",
         location: "Lele, Nila, Mas",
+        city: "Jakarta Selatan",
         price: 50000,
         rating: 4.7,
         reviews: 120,
         slots: 20,
         image: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         available: true,
-        facilities: ["Saung", "Parkir Luas", "Kantin", "Sewa Alat"]
+        facilities: ["Saung", "Parkir Luas", "Kantin", "Sewa Alat", "Toilet Bersih"],
+        description: "Pemancingan nyaman dengan suasana pedesaan. Cocok untuk keluarga dan pemancing pemula. Kolam terawat, ikan padat."
     },
     {
         id: 2,
         name: "Kolam Mancing Sejahtera",
         location: "Gurame, Patin",
+        city: "Depok",
         price: 75000,
         rating: 4.5,
         reviews: 85,
         slots: 15,
         image: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         available: true,
-        facilities: ["AC Room", "Mushola", "WiFi", "Resto"]
+        facilities: ["AC Room", "Mushola", "WiFi", "Resto", "Kolam VIP"],
+        description: "Pemancingan premium dengan fasilitas lengkap. Nikmati sensasi mancing gurame dan patin ukuran jumbo."
     },
     {
         id: 3,
         name: "Spot Alam Liar (Waduk)",
         location: "Bawal, Nila",
+        city: "Bogor",
         price: 30000,
         rating: 4.8,
         reviews: 200,
         slots: 0,
         image: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
         available: false,
-        facilities: ["Camping Ground", "Toilet Umum"]
+        facilities: ["Camping Ground", "Toilet Umum", "Warung Terapung"],
+        description: "Mancing di alam terbuka langsung di waduk. Tantangan tersendiri dengan ikan bawal dan nila liar."
+    },
+    {
+        id: 4,
+        name: "Mancing Mania Center",
+        location: "Mas, Tombro",
+        city: "Tangerang",
+        price: 60000,
+        rating: 4.6,
+        reviews: 150,
+        slots: 25,
+        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        available: true,
+        facilities: ["Panggung", "Sewa Alat", "Kantin", "Lampu Sorot"],
+        description: "Pemancingan malam dengan lampu sorot. Sensasi mancing malam yang seru dan menantang."
+    },
+    {
+        id: 5,
+        name: "Pemancingan Ikan Hias",
+        location: "Koi, Arwana",
+        city: "Bandung",
+        price: 100000,
+        rating: 4.9,
+        reviews: 60,
+        slots: 10,
+        image: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+        available: true,
+        facilities: ["Kolam Kaca", "AC", "Minuman Gratis", "Pemandu"],
+        description: "Pengalaman mancing eksklusif untuk ikan hias. Fasilitas mewah dan pelayanan prima."
     }
 ];
 
+// Data User & Tiket
+let currentUser = null;
+let userTickets = [
+    {
+        id: "TKT-001",
+        spotName: "Pemancingan Pak Budi",
+        date: "25 Okt 2023",
+        qty: 2,
+        total: 100000,
+        status: "Selesai",
+        image: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+    }
+];
+
+let selectedSpot = null;
+let bookingData = {};
+
 // ==========================================
-// 2. NAVIGASI TAB (SPA)
+// 2. AUTENTIKASI (LOGIN / SIGN UP)
+// ==========================================
+function toggleAuth(type) {
+    const btnLogin = document.getElementById('btn-login');
+    const btnSignup = document.getElementById('btn-signup');
+    const formLogin = document.getElementById('loginForm');
+    const formSignup = document.getElementById('signupForm');
+
+    if (type === 'login') {
+        btnLogin.className = "flex-1 py-2 text-sm font-semibold bg-white text-primary rounded-lg shadow-sm";
+        btnSignup.className = "flex-1 py-2 text-sm font-semibold text-gray-500 rounded-lg";
+        formLogin.classList.remove('hidden');
+        formSignup.classList.add('hidden');
+    } else {
+        btnSignup.className = "flex-1 py-2 text-sm font-semibold bg-white text-primary rounded-lg shadow-sm";
+        btnLogin.className = "flex-1 py-2 text-sm font-semibold text-gray-500 rounded-lg";
+        formSignup.classList.remove('hidden');
+        formLogin.classList.add('hidden');
+    }
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    // Simulasi login sukses
+    currentUser = {
+        name: "Rizky Pemancing",
+        email: "rizky@email.com",
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+        level: "Pemancing Aktif",
+        points: 1250
+    };
+    
+    document.getElementById('authModal').classList.add('hidden');
+    showToast(`Selamat datang, ${currentUser.name}!`);
+    switchTab('home');
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('authModal').classList.remove('hidden');
+    switchTab('home');
+}
+
+// ==========================================
+// 3. NAVIGASI TAB (SPA)
 // ==========================================
 function switchTab(tabName) {
     // Reset semua warna nav
-    ['home', 'explore', 'tickets', 'owner'].forEach(tab => {
+    ['home', 'explore', 'tickets', 'profile'].forEach(tab => {
         const btn = document.getElementById(`nav-${tab}`);
-        btn.className = "flex flex-col items-center text-gray-400 hover:text-primary transition";
-        btn.querySelector('svg').setAttribute('fill', 'none');
-        btn.querySelector('svg').setAttribute('stroke', 'currentColor');
+        if(btn) {
+            btn.className = "flex flex-col items-center text-gray-400 hover:text-primary transition";
+            btn.querySelector('svg').setAttribute('fill', 'none');
+            btn.querySelector('svg').setAttribute('stroke', 'currentColor');
+        }
     });
 
     // Aktifkan tab yang dipilih
     const activeBtn = document.getElementById(`nav-${tabName}`);
-    activeBtn.className = "flex flex-col items-center text-primary";
-    activeBtn.querySelector('svg').setAttribute('fill', 'currentColor');
-    activeBtn.querySelector('svg').removeAttribute('stroke');
+    if(activeBtn) {
+        activeBtn.className = "flex flex-col items-center text-primary";
+        activeBtn.querySelector('svg').setAttribute('fill', 'currentColor');
+        activeBtn.querySelector('svg').removeAttribute('stroke');
+    }
 
     // Render konten berdasarkan tab
     const content = document.getElementById('app-content');
     if (tabName === 'home') renderHome(content);
     else if (tabName === 'explore') renderExplore(content);
     else if (tabName === 'tickets') renderTickets(content);
-    else if (tabName === 'owner') renderOwner(content);
+    else if (tabName === 'profile') renderProfile(content);
     
     content.scrollTop = 0;
 }
 
 // ==========================================
-// 3. RENDER HALAMAN (VIEWS)
+// 4. RENDER HALAMAN (VIEWS)
 // ==========================================
 
 // --- VIEW: HOME ---
@@ -113,7 +212,7 @@ function renderHome(container) {
             </div>
         </div>
     `;
-    renderSpots(spots);
+    renderSpots(spots.slice(0, 3)); // Tampilkan 3 spot pertama di home
 }
 
 // --- VIEW: EXPLORE ---
@@ -122,11 +221,11 @@ function renderExplore(container) {
         <div class="px-5 pt-4 pb-2 bg-white">
             <h2 class="text-lg font-bold mb-3">Explore Spot</h2>
             <div class="flex space-x-2 overflow-x-auto hide-scrollbar">
-                <button class="bg-primary text-white px-4 py-2 rounded-full text-xs font-semibold">Semua</button>
-                <button class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold">Lele</button>
-                <button class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold">Nila</button>
-                <button class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold">Gurame</button>
-                <button class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold">Bawal</button>
+                <button onclick="filterCategory('all')" class="bg-primary text-white px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Semua</button>
+                <button onclick="filterCategory('Lele')" class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Lele</button>
+                <button onclick="filterCategory('Nila')" class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Nila</button>
+                <button onclick="filterCategory('Gurame')" class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Gurame</button>
+                <button onclick="filterCategory('Bawal')" class="bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap">Bawal</button>
             </div>
         </div>
         <div class="px-5 mt-4">
@@ -138,96 +237,109 @@ function renderExplore(container) {
 
 // --- VIEW: TIKET (Riwayat Booking) ---
 function renderTickets(container) {
+    if (!currentUser) {
+        container.innerHTML = `<div class="flex flex-col items-center justify-center h-full pt-20"><p class="text-gray-500 mb-4">Silakan login untuk melihat tiket Anda.</p><button onclick="document.getElementById('authModal').classList.remove('hidden')" class="bg-primary text-white px-6 py-2 rounded-xl font-bold">Login</button></div>`;
+        return;
+    }
+
+    let ticketsHtml = userTickets.map(t => `
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
+            <div class="flex justify-between items-center border-b pb-3 mb-3">
+                <span class="font-bold text-primary text-sm">${t.spotName}</span>
+                <span class="bg-${t.status === 'Selesai' ? 'green' : 'blue'}-100 text-${t.status === 'Selesai' ? 'green' : 'blue'}-700 text-[10px] px-2 py-1 rounded font-bold">${t.status}</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Tanggal</span>
+                <span class="font-semibold text-dark">${t.date}</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Jumlah Orang</span>
+                <span class="font-semibold text-dark">${t.qty} Orang</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-3 pt-3 border-t">
+                <span>Total Bayar</span>
+                <span class="font-bold text-primary">Rp ${t.total.toLocaleString('id-ID')}</span>
+            </div>
+            ${t.status === 'Selesai' ? `<button onclick="openReviewModal()" class="mt-4 w-full bg-accent text-white py-2 rounded-xl text-sm font-bold">Beri Review</button>` : `<button class="mt-4 w-full bg-gray-100 text-gray-400 py-2 rounded-xl text-sm font-bold cursor-not-allowed">Menunggu Jadwal</button>`}
+        </div>
+    `).join('');
+
     container.innerHTML = `
         <div class="px-5 pt-6">
             <h2 class="text-xl font-bold mb-4">Tiket Saya</h2>
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">
-                <div class="flex justify-between items-center border-b pb-3 mb-3">
-                    <span class="font-bold text-primary">Pemancingan Pak Budi</span>
-                    <span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">Selesai</span>
-                </div>
-                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Tanggal</span>
-                    <span class="font-semibold text-dark">25 Okt 2023</span>
-                </div>
-                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Jumlah Orang</span>
-                    <span class="font-semibold text-dark">2 Orang</span>
-                </div>
-                <div class="flex justify-between text-xs text-gray-500 mt-3 pt-3 border-t">
-                    <span>Total Bayar</span>
-                    <span class="font-bold text-primary">Rp 100.000</span>
-                </div>
-                <button onclick="openReviewModal()" class="mt-4 w-full bg-accent text-white py-2 rounded-xl text-sm font-bold">Beri Review</button>
-            </div>
-            <p class="text-center text-gray-400 text-sm mt-10">Belum ada tiket lain.</p>
+            ${ticketsHtml || '<p class="text-center text-gray-400 text-sm mt-10">Belum ada tiket.</p>'}
         </div>
     `;
 }
 
-// --- VIEW: OWNER DASHBOARD (Untuk Pemilik Pemancingan) ---
-function renderOwner(container) {
+// --- VIEW: PROFILE ---
+function renderProfile(container) {
+    if (!currentUser) {
+        container.innerHTML = `<div class="flex flex-col items-center justify-center h-full pt-20"><p class="text-gray-500 mb-4">Silakan login untuk melihat profil.</p><button onclick="document.getElementById('authModal').classList.remove('hidden')" class="bg-primary text-white px-6 py-2 rounded-xl font-bold">Login</button></div>`;
+        return;
+    }
+
     container.innerHTML = `
         <div class="px-5 pt-6">
-            <div class="bg-dark rounded-2xl p-5 text-white mb-6">
-                <h2 class="text-lg font-bold mb-1">Dashboard Pemilik</h2>
-                <p class="text-sm text-gray-300">Kelola pemancingan Anda di sini.</p>
-                <div class="grid grid-cols-2 gap-4 mt-5">
-                    <div class="bg-white/10 p-3 rounded-xl">
-                        <p class="text-xs text-gray-300">Pendapatan Hari Ini</p>
-                        <p class="text-lg font-bold text-green-400">Rp 1.250.000</p>
-                    </div>
-                    <div class="bg-white/10 p-3 rounded-xl">
-                        <p class="text-xs text-gray-300">Booking Masuk</p>
-                        <p class="text-lg font-bold text-accent">12 Tiket</p>
-                    </div>
+            <div class="flex items-center space-x-4 mb-6">
+                <img src="${currentUser.avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-primary">
+                <div>
+                    <h2 class="text-lg font-bold text-dark">${currentUser.name}</h2>
+                    <p class="text-xs text-gray-500">${currentUser.email}</p>
+                    <span class="inline-block mt-1 bg-blue-100 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">${currentUser.level}</span>
                 </div>
             </div>
 
-            <h3 class="font-bold text-dark mb-3">Menu Pengelolaan</h3>
-            <div class="space-y-3">
-                <div class="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-100">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-primary">📋</div>
-                        <div>
-                            <p class="font-semibold text-sm">Daftar Tempat</p>
-                            <p class="text-[10px] text-gray-500">Kelola informasi spot Anda</p>
-                        </div>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            <div class="bg-gradient-to-r from-primary to-blue-400 rounded-2xl p-4 text-white flex justify-between items-center shadow-lg mb-6">
+                <div>
+                    <p class="text-xs text-blue-100">Poin MancingYuk</p>
+                    <p class="text-2xl font-bold">${currentUser.points}</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-100">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">💰</div>
-                        <div>
-                            <p class="font-semibold text-sm">Atur Harga & Jadwal</p>
-                            <p class="text-[10px] text-gray-500">Sesuaikan tarif dan slot</p>
-                        </div>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between border border-gray-100">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">📊</div>
-                        <div>
-                            <p class="font-semibold text-sm">Laporan & Statistik</p>
-                            <p class="text-[10px] text-gray-500">Lihat performa pemancingan</p>
-                        </div>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </div>
+                <svg class="w-10 h-10 text-white opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
             </div>
 
-            <div class="mt-8 bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                <h4 class="font-bold text-primary text-sm mb-2">Mengapa Bergabung?</h4>
-                <p class="text-xs text-gray-600 leading-relaxed">Dapatkan lebih banyak pelanggan, kelola booking dengan mudah, dan nikmati promosi gratis di platform MancingYuk!</p>
+            <h3 class="font-bold text-dark mb-3">Pengaturan Akun</h3>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+                <button onclick="showToast('Fitur edit profil segera hadir')" class="w-full flex items-center justify-between p-4 hover:bg-gray-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-primary">👤</div>
+                        <span class="text-sm font-medium">Edit Profil</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+                <button onclick="showToast('Fitur ubah password segera hadir')" class="w-full flex items-center justify-between p-4 hover:bg-gray-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">🔒</div>
+                        <span class="text-sm font-medium">Ubah Password</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+                <button onclick="showToast('Fitur riwayat transaksi segera hadir')" class="w-full flex items-center justify-between p-4 hover:bg-gray-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">📜</div>
+                        <span class="text-sm font-medium">Riwayat Transaksi</span>
+                    </div>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center justify-between p-4 hover:bg-red-50">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center text-red-600">🚪</div>
+                        <span class="text-sm font-medium text-red-600">Keluar</span>
+                    </div>
+                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-xs text-gray-400">MancingYuk! v1.0.0</p>
+                <p class="text-[10px] text-gray-300 mt-1">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
             </div>
         </div>
     `;
 }
 
 // ==========================================
-// 4. KOMPONEN & FUNGSI PENDUKUNG
+// 5. KOMPONEN & FUNGSI PENDUKUNG
 // ==========================================
 
 function renderHowItWorks() {
@@ -276,7 +388,7 @@ function renderSpots(data) {
                     <h3 class="text-base font-bold text-dark mb-1">${spot.name}</h3>
                     <p class="text-xs text-gray-500 mb-4 flex items-center">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Ikan: ${spot.location}
+                        ${spot.city} • Ikan: ${spot.location}
                     </p>
                     <div class="flex justify-between items-center">
                         <div>
@@ -295,23 +407,40 @@ function renderSpots(data) {
 function searchSpots(query) {
     const filtered = spots.filter(s => 
         s.name.toLowerCase().includes(query.toLowerCase()) || 
-        s.location.toLowerCase().includes(query.toLowerCase())
+        s.location.toLowerCase().includes(query.toLowerCase()) ||
+        s.city.toLowerCase().includes(query.toLowerCase())
     );
     renderSpots(filtered);
 }
 
-// ==========================================
-// 5. DETAIL & BOOKING (Simulasi Revenue Model)
-// ==========================================
-let selectedSpot = null;
+function filterCategory(category) {
+    // Logika filter sederhana berdasarkan jenis ikan
+    const buttons = document.querySelectorAll('#app-content button');
+    buttons.forEach(btn => {
+        if(btn.innerText.toLowerCase().includes(category.toLowerCase()) || category === 'all') {
+            btn.className = "bg-primary text-white px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap";
+        } else {
+            btn.className = "bg-gray-200 text-gray-600 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap";
+        }
+    });
 
+    if (category === 'all') {
+        renderSpots(spots);
+    } else {
+        const filtered = spots.filter(s => s.location.toLowerCase().includes(category.toLowerCase()));
+        renderSpots(filtered);
+    }
+}
+
+// ==========================================
+// 6. DETAIL & BOOKING
+// ==========================================
 function openDetail(id) {
     selectedSpot = spots.find(s => s.id === id);
     const modal = document.getElementById('detailModal');
     const content = document.getElementById('detailContent');
     
-    // Simulasi Perhitungan Revenue Model (sesuai infografis)
-    const platformFee = selectedSpot.price * 0.08; // 8% fee
+    const platformFee = selectedSpot.price * 0.08;
     const ownerRevenue = selectedSpot.price - platformFee;
 
     content.innerHTML = `
@@ -319,7 +448,7 @@ function openDetail(id) {
         <div class="flex justify-between items-start mb-4">
             <div>
                 <h3 class="text-xl font-bold text-dark">${selectedSpot.name}</h3>
-                <p class="text-xs text-gray-500 mt-1">📍 ${selectedSpot.location}</p>
+                <p class="text-xs text-gray-500 mt-1">📍 ${selectedSpot.city} • ${selectedSpot.location}</p>
             </div>
             <button onclick="closeDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -332,7 +461,9 @@ function openDetail(id) {
             ${selectedSpot.facilities.map(f => `<span class="bg-gray-100 text-gray-600 text-[10px] px-3 py-1 rounded-full whitespace-nowrap">${f}</span>`).join('')}
         </div>
 
-        <div class="bg-blue-50 p-4 rounded-2xl mb-4 border border-blue-100">
+        <p class="text-xs text-gray-500 leading-relaxed mb-6">${selectedSpot.description}</p>
+
+        <div class="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
             <h4 class="font-bold text-primary text-sm mb-2">Detail Harga</h4>
             <div class="flex justify-between text-xs text-gray-600 mb-1">
                 <span>Harga Tiket</span>
@@ -349,6 +480,11 @@ function openDetail(id) {
         </div>
 
         <div class="mb-6">
+            <label class="block text-xs font-medium text-gray-500 mb-2">Tanggal Mancing</label>
+            <input type="date" id="bookingDate" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm" required>
+        </div>
+
+        <div class="mb-6">
             <label class="block text-xs font-medium text-gray-500 mb-2">Jumlah Orang</label>
             <input type="number" id="qtyInput" min="1" max="10" value="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm" oninput="updateTotal()">
         </div>
@@ -358,7 +494,7 @@ function openDetail(id) {
             <p id="totalPrice" class="text-xl font-bold text-primary">Rp ${(selectedSpot.price * 2).toLocaleString('id-ID')}</p>
         </div>
 
-        <button onclick="confirmBooking()" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-blue-600 transition shadow-lg shadow-blue-200 mb-4">Booking Sekarang</button>
+        <button onclick="openCheckout()" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-blue-600 transition shadow-lg shadow-blue-200 mb-4">Lanjut ke Pembayaran</button>
         <button onclick="inviteFriend()" class="w-full bg-accent text-white py-3.5 rounded-xl font-bold hover:bg-yellow-600 transition shadow-lg shadow-yellow-200">Ajak Teman Mancing</button>
     `;
 
@@ -379,27 +515,92 @@ function updateTotal() {
     document.getElementById('totalPrice').innerText = `Rp ${total.toLocaleString('id-ID')}`;
 }
 
-function confirmBooking() {
+// ==========================================
+// 7. CHECKOUT & PEMBAYARAN
+// ==========================================
+function openCheckout() {
+    const date = document.getElementById('bookingDate').value;
+    const qty = parseInt(document.getElementById('qtyInput').value);
+    
+    if (!date) {
+        showToast('Silakan pilih tanggal terlebih dahulu!');
+        return;
+    }
+
+    bookingData = {
+        spot: selectedSpot,
+        date: date,
+        qty: qty,
+        total: selectedSpot.price * qty
+    };
+
+    // Isi detail checkout
+    document.getElementById('checkoutDetails').innerHTML = `
+        <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${selectedSpot.name}</span></div>
+        <div class="flex justify-between mb-1"><span>Tanggal</span><span class="font-semibold text-dark">${date}</span></div>
+        <div class="flex justify-between mb-1"><span>Jumlah Orang</span><span class="font-semibold text-dark">${qty} Orang</span></div>
+        <div class="flex justify-between border-t pt-2 mt-2"><span>Total</span><span class="font-bold text-primary">Rp ${bookingData.total.toLocaleString('id-ID')}</span></div>
+    `;
+    document.getElementById('checkoutTotal').innerText = `Rp ${bookingData.total.toLocaleString('id-ID')}`;
+
     closeDetail();
-    showToast('Booking Berhasil! Sampai jumpa di lokasi.');
-    // Simulasi pindah ke tab tiket
-    setTimeout(() => switchTab('tickets'), 1500);
+    document.getElementById('checkoutModal').classList.remove('hidden');
 }
 
-function inviteFriend() {
-    showToast('Link ajakan berhasil disalin! Ajak temanmu mancing.');
+function closeCheckout() {
+    document.getElementById('checkoutModal').classList.add('hidden');
 }
 
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.className = 'absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-dark text-white px-5 py-3 rounded-xl shadow-2xl z-[80] flex items-center space-x-2 text-sm w-[90%] justify-center transition-opacity duration-300';
-    toast.innerHTML = `<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>${message}</span>`;
-    document.querySelector('.relative.w-full.h-full').appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+function processPayment() {
+    // Simulasi proses pembayaran
+    const btn = document.querySelector('#checkoutModal button');
+    btn.innerHTML = 'Memproses...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.innerHTML = 'Bayar Sekarang';
+        btn.disabled = false;
+        
+        document.getElementById('checkoutModal').classList.add('hidden');
+        
+        // Buat tiket baru
+        const newTicket = {
+            id: `TKT-00${userTickets.length + 1}`,
+            spotName: bookingData.spot.name,
+            date: bookingData.date,
+            qty: bookingData.qty,
+            total: bookingData.total,
+            status: "Aktif",
+            image: bookingData.spot.image
+        };
+        
+        userTickets.unshift(newTicket); // Tambahkan ke paling atas
+
+        // Tampilkan e-tiket di modal sukses
+        document.getElementById('ticketDetails').innerHTML = `
+            <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${newTicket.spotName}</span></div>
+            <div class="flex justify-between mb-1"><span>Tanggal</span><span class="font-semibold text-dark">${newTicket.date}</span></div>
+            <div class="flex justify-between mb-1"><span>Jumlah</span><span class="font-semibold text-dark">${newTicket.qty} Orang</span></div>
+            <div class="flex justify-between"><span>Total</span><span class="font-bold text-primary">Rp ${newTicket.total.toLocaleString('id-ID')}</span></div>
+            <div class="mt-4 pt-4 border-t text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-xl mx-auto flex items-center justify-center">
+                    <span class="text-[10px] text-gray-400">QR Code</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2">Tunjukkan QR ini ke pengelola</p>
+            </div>
+        `;
+        
+        document.getElementById('successModal').classList.remove('hidden');
+    }, 1500);
+}
+
+function closeSuccess() {
+    document.getElementById('successModal').classList.add('hidden');
+    switchTab('tickets'); // Arahkan ke halaman tiket
 }
 
 // ==========================================
-// 6. REVIEW MODAL
+// 8. FUNGSI TAMBAHAN (Review, Invite, Toast)
 // ==========================================
 function openReviewModal() {
     document.getElementById('reviewModal').classList.remove('hidden');
@@ -410,7 +611,24 @@ function submitReview() {
     showToast('Terima kasih! Review Anda sangat berharga.');
 }
 
+function inviteFriend() {
+    showToast('Link ajakan berhasil disalin! Ajak temanmu mancing.');
+}
+
+function showToast(message) {
+    // Hapus toast yang ada sebelumnya jika ada
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) existingToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-dark text-white px-5 py-3 rounded-xl shadow-2xl z-[100] flex items-center space-x-2 text-sm w-[90%] justify-center transition-opacity duration-300';
+    toast.innerHTML = `<svg class="w-5 h-5 text-green-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>${message}</span>`;
+    document.querySelector('.relative.w-full.h-full').appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
 // Inisialisasi awal
 document.addEventListener('DOMContentLoaded', () => {
-    switchTab('home');
+    // Tampilkan modal login saat pertama kali dibuka
+    document.getElementById('authModal').classList.remove('hidden');
 });
