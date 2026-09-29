@@ -1,47 +1,27 @@
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-#detailModal.show, #notifModal.show, #ticketDetailModal.show { display: block; }
+#detailModal.show, #notifModal.show, #ticketDetailModal.show,
+#eventModal.show, #ownerSpotModal.show { display: block; }
 #detailModal.show #detailContent,
 #notifModal.show #notifContent,
-#ticketDetailModal.show #ticketDetailContent { transform: translateY(0); }
+#ticketDetailModal.show #ticketDetailContent,
+#eventModal.show #eventContent,
+#ownerSpotModal.show #ownerSpotContent { transform: translateY(0); }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
+
+@keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+.heart-pop { animation: heartPop 0.3s ease-out; }
 
 body { overflow: hidden; }
 
-#toastContainer {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    z-index: 200;
-    pointer-events: none;
-    padding: 0 16px;
-}
-.toast {
-    pointer-events: auto;
-    margin-top: 60px;
-    background: #1e293b;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    animation: slideIn 0.3s ease-out;
-    margin-bottom: 8px;
-}
+#toastContainer { position: absolute; top: 0; left: 0; right: 0; z-index: 200; pointer-events: none; padding: 0 16px; }
+.toast { pointer-events: auto; margin-top: 60px; background: #1e293b; color: white; padding: 12px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; margin-bottom: 8px; }
 .toast.success { background: #22c55e; }
 .toast.error { background: #ef4444; }
 .toast.info { background: #0ea5e9; }
