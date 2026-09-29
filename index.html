@@ -23,10 +23,10 @@
         }
     </script>
 </head>
-<body class="bg-gray-800 flex justify-center items-center h-screen overflow-hidden">
+<body class="bg-gray-800 flex justify-center items-center h-[100dvh] overflow-hidden">
 
-    <!-- Simulasi Frame HP -->
-    <div class="relative w-full h-full md:w-[400px] md:h-[850px] bg-white md:rounded-[40px] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col">
+    <!-- Simulasi Frame HP (Tinggi Responsif) -->
+    <div class="relative w-full h-full md:w-[400px] md:h-[85vh] md:max-h-[850px] bg-white md:rounded-[40px] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col">
         
         <!-- Status Bar -->
         <div class="hidden md:flex justify-between items-center px-6 pt-3 pb-1 bg-white text-xs font-semibold text-gray-800 z-50 shrink-0">
@@ -55,8 +55,8 @@
             <!-- Konten akan di-render oleh JavaScript -->
         </main>
 
-        <!-- Bottom Navigation (Fixed di bawah frame) -->
-        <nav class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center py-3 pb-5 z-50">
+        <!-- Bottom Navigation (Absolute di dalam frame) -->
+        <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-3 pb-5 z-50">
             <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center text-primary">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span class="text-[10px] font-semibold mt-1">Home</span>
