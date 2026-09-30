@@ -3,57 +3,146 @@
 // ==========================================
 try {
     const keys = ['my_user','my_tickets','my_notifs','my_events','my_posts','owner_bookings','my_catches','my_trips','chat_history'];
-    keys.forEach(k => {
-        const v = localStorage.getItem(k);
-        if (v) JSON.parse(v);
-    });
+    keys.forEach(k => { const v = localStorage.getItem(k); if (v) JSON.parse(v); });
 } catch (e) { console.warn('Storage corrupt, reset'); localStorage.clear(); }
 
 // ==========================================
-// DATA
+// HELPER GAMBAR (Local + Fallback Online)
+// ==========================================
+const IMG = {
+    spots: {
+        1: { local: "assets/spots/spot-1-pak-budi.jpg", fallback: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80" },
+        2: { local: "assets/spots/spot-2-sejahtera.jpg", fallback: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80" },
+        3: { local: "assets/spots/spot-3-waduk.jpg", fallback: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80" },
+        4: { local: "assets/spots/spot-4-mania-center.jpg", fallback: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80" },
+        5: { local: "assets/spots/spot-5-ikan-hias.jpg", fallback: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=800&q=80" },
+        6: { local: "assets/spots/spot-6-citarum.jpg", fallback: "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=800&q=80" }
+    },
+    events: {
+        1: { local: "assets/events/event-1-lele.jpg", fallback: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80" },
+        2: { local: "assets/events/event-2-gurame.jpg", fallback: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80" },
+        3: { local: "assets/events/event-3-fun.jpg", fallback: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80" },
+        4: { local: "assets/events/event-4-charity.jpg", fallback: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80" }
+    },
+    community: {
+        1: { local: "assets/community/post-1-rizky.jpg", fallback: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80" },
+        2: { local: "assets/community/post-2-andi.jpg", fallback: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80" },
+        3: { local: "assets/community/post-3-siti.jpg", fallback: "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=800&q=80" }
+    },
+    fish: {
+        "Lele": { local: "assets/fish/fish-lele.jpg", fallback: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80" },
+        "Nila": { local: "assets/fish/fish-nila.jpg", fallback: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80" },
+        "Gurame": { local: "assets/fish/fish-gurame.jpg", fallback: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80" },
+        "Mas": { local: "assets/fish/fish-mas.jpg", fallback: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80" },
+        "Bawal": { local: "assets/fish/fish-bawal.jpg", fallback: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80" },
+        "Patin": { local: "assets/fish/fish-patin.jpg", fallback: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80" }
+    },
+    tips: {
+        1: { local: "assets/tips/tips-1-lele.jpg", fallback: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80" },
+        2: { local: "assets/tips/tips-2-umpan.jpg", fallback: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80" },
+        3: { local: "assets/tips/tips-3-casting.jpg", fallback: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80" },
+        4: { local: "assets/tips/tips-4-joran.jpg", fallback: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80" }
+    },
+    recipes: {
+        1: { local: "assets/recipes/recipe-1-pecel.jpg", fallback: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80" },
+        2: { local: "assets/recipes/recipe-2-gurame.jpg", fallback: "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=800&q=80" },
+        3: { local: "assets/recipes/recipe-3-nila.jpg", fallback: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80" }
+    },
+    merch: {
+        1: { local: "assets/merch/merch-kaos.png", fallback: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80" },
+        2: { local: "assets/merch/merch-topi.png", fallback: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80" },
+        3: { local: "assets/merch/merch-tumbler.png", fallback: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80" }
+    },
+    avatars: {
+        default: { local: "assets/avatars/avatar-default.png", fallback: "https://i.pravatar.cc/150?u=default" },
+        rizky: { local: "assets/avatars/avatar-rizky.jpg", fallback: "https://i.pravatar.cc/150?u=rizky" },
+        andi: { local: "assets/avatars/avatar-andi.jpg", fallback: "https://i.pravatar.cc/150?u=andi" },
+        siti: { local: "assets/avatars/avatar-siti.jpg", fallback: "https://i.pravatar.cc/150?u=siti" },
+        owner: { local: "assets/avatars/avatar-owner.jpg", fallback: "https://i.pravatar.cc/150?u=owner" },
+        "leaderboard-1": { local: "assets/avatars/avatar-leaderboard-1.jpg", fallback: "https://i.pravatar.cc/150?u=juragan1" },
+        "leaderboard-2": { local: "assets/avatars/avatar-leaderboard-2.jpg", fallback: "https://i.pravatar.cc/150?u=master2" },
+        "leaderboard-3": { local: "assets/avatars/avatar-leaderboard-3.jpg", fallback: "https://i.pravatar.cc/150?u=haji3" }
+    },
+    payments: {
+        gopay: { local: "assets/payments/logo-gopay.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png" },
+        ovo: { local: "assets/payments/logo-ovo.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OVO_logo.svg/2560px-OVO_logo.svg.png" },
+        bca: { local: "assets/payments/logo-bca.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/2560px-Bank_Central_Asia.svg.png" }
+    }
+};
+
+// Helper: buat tag img dengan fallback otomatis
+function imgTag(src, fallback, alt, className) {
+    return '<img src="' + src + '" data-fallback="' + fallback + '" alt="' + (alt || '') + '" class="' + (className || '') + '" onerror="handleImgError(this)">';
+}
+
+// Global error handler - pasang di body sekali
+window.handleImgError = function(img) {
+    if (img.dataset.fallback && img.src !== img.dataset.fallback) {
+        img.src = img.dataset.fallback;
+    } else {
+        img.src = "https://via.placeholder.com/400x200?text=No+Image";
+    }
+};
+
+// Getter untuk image path (local)
+function getImgLocal(category, key) {
+    const item = IMG[category] && IMG[category][key];
+    return item ? item.local : '';
+}
+function getImgFallback(category, key) {
+    const item = IMG[category] && IMG[category][key];
+    return item ? item.fallback : 'https://via.placeholder.com/400x200';
+}
+// Build img tag lengkap dari kategori
+function imgFrom(category, key, alt, cls) {
+    return imgTag(getImgLocal(category, key), getImgFallback(category, key), alt, cls);
+}
+
+// ==========================================
+// DATA SPOT (Pakai Helper IMG)
 // ==========================================
 const DEFAULT_SPOTS = [
-    { id: 1, name: "Pemancingan Pak Budi", location: "Lele, Nila, Mas", city: "Jakarta Selatan", price: 50000, rating: 4.7, reviews: 120, slots: 20, image: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80", facilities: ["Saung", "Parkir Luas", "Kantin", "Sewa Alat", "Toilet"], description: "Pemancingan nyaman dengan suasana pedesaan.", owner: "Pak Budi", premium: true, ownerId: "owner1", distance: 2.3, open: "06:00 - 22:00" },
-    { id: 2, name: "Kolam Mancing Sejahtera", location: "Gurame, Patin", city: "Depok", price: 75000, rating: 4.5, reviews: 85, slots: 15, image: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80", facilities: ["AC Room", "Mushola", "WiFi", "Resto"], description: "Pemancingan premium dengan fasilitas lengkap.", owner: "Haji Sejahtera", premium: true, ownerId: "owner2", distance: 8.5, open: "07:00 - 21:00" },
-    { id: 3, name: "Spot Alam Liar (Waduk)", location: "Bawal, Nila", city: "Bogor", price: 30000, rating: 4.8, reviews: 200, slots: 0, image: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80", facilities: ["Camping Ground", "Toilet"], description: "Mancing di alam terbuka langsung di waduk.", owner: "Kelompok Tani Waduk", premium: false, ownerId: "owner3", distance: 25.0, open: "24 Jam" },
-    { id: 4, name: "Mancing Mania Center", location: "Mas, Tombro", city: "Tangerang", price: 60000, rating: 4.6, reviews: 150, slots: 25, image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", facilities: ["Panggung", "Sewa Alat", "Kantin"], description: "Pemancingan malam dengan lampu sorot.", owner: "Bang Jago", premium: false, ownerId: "owner4", distance: 15.8, open: "16:00 - 04:00" },
-    { id: 5, name: "Pemancingan Ikan Hias", location: "Koi, Arwana", city: "Bandung", price: 100000, rating: 4.9, reviews: 60, slots: 10, image: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&w=800&q=80", facilities: ["Kolam Kaca", "AC", "Pemandu"], description: "Pengalaman mancing eksklusif untuk ikan hias.", owner: "Dedi Koi", premium: true, ownerId: "owner5", distance: 120, open: "08:00 - 20:00" },
-    { id: 6, name: "Sungai Citarum Fishing", location: "Baung, Mujair", city: "Karawang", price: 25000, rating: 4.3, reviews: 45, slots: 30, image: "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=800&q=80", facilities: ["Area Piknik", "Mushola"], description: "Mancing di tepi sungai dengan pemandangan indah.", owner: "Kang Ujang", premium: false, ownerId: "owner6", distance: 45, open: "05:00 - 18:00" }
+    { id: 1, name: "Pemancingan Pak Budi", location: "Lele, Nila, Mas", city: "Jakarta Selatan", price: 50000, rating: 4.7, reviews: 120, slots: 20, image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), facilities: ["Saung","Parkir Luas","Kantin","Sewa Alat","Toilet"], description: "Pemancingan nyaman dengan suasana pedesaan.", owner: "Pak Budi", premium: true, ownerId: "owner1", distance: 2.3, open: "06:00 - 22:00" },
+    { id: 2, name: "Kolam Mancing Sejahtera", location: "Gurame, Patin", city: "Depok", price: 75000, rating: 4.5, reviews: 85, slots: 15, image: getImgLocal('spots',2), imageFallback: getImgFallback('spots',2), facilities: ["AC Room","Mushola","WiFi","Resto"], description: "Pemancingan premium dengan fasilitas lengkap.", owner: "Haji Sejahtera", premium: true, ownerId: "owner2", distance: 8.5, open: "07:00 - 21:00" },
+    { id: 3, name: "Spot Alam Liar (Waduk)", location: "Bawal, Nila", city: "Bogor", price: 30000, rating: 4.8, reviews: 200, slots: 0, image: getImgLocal('spots',3), imageFallback: getImgFallback('spots',3), facilities: ["Camping Ground","Toilet"], description: "Mancing di alam terbuka langsung di waduk.", owner: "Kelompok Tani Waduk", premium: false, ownerId: "owner3", distance: 25.0, open: "24 Jam" },
+    { id: 4, name: "Mancing Mania Center", location: "Mas, Tombro", city: "Tangerang", price: 60000, rating: 4.6, reviews: 150, slots: 25, image: getImgLocal('spots',4), imageFallback: getImgFallback('spots',4), facilities: ["Panggung","Sewa Alat","Kantin"], description: "Pemancingan malam dengan lampu sorot.", owner: "Bang Jago", premium: false, ownerId: "owner4", distance: 15.8, open: "16:00 - 04:00" },
+    { id: 5, name: "Pemancingan Ikan Hias", location: "Koi, Arwana", city: "Bandung", price: 100000, rating: 4.9, reviews: 60, slots: 10, image: getImgLocal('spots',5), imageFallback: getImgFallback('spots',5), facilities: ["Kolam Kaca","AC","Pemandu"], description: "Pengalaman mancing eksklusif untuk ikan hias.", owner: "Dedi Koi", premium: true, ownerId: "owner5", distance: 120, open: "08:00 - 20:00" },
+    { id: 6, name: "Sungai Citarum Fishing", location: "Baung, Mujair", city: "Karawang", price: 25000, rating: 4.3, reviews: 45, slots: 30, image: getImgLocal('spots',6), imageFallback: getImgFallback('spots',6), facilities: ["Area Piknik","Mushola"], description: "Mancing di tepi sungai dengan pemandangan indah.", owner: "Kang Ujang", premium: false, ownerId: "owner6", distance: 45, open: "05:00 - 18:00" }
 ];
 
 const EVENTS_DATA = [
-    { id: 1, title: "Turnamen Mancing Lele", spotId: 1, date: "15 Nov 2024", time: "06:00 - 12:00", fee: 50000, prize: "Rp 5.000.000", participants: 45, maxParticipants: 100, status: "upcoming", image: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80", desc: "Turnamen mancing lele dengan hadiah utama Rp 5 juta." },
-    { id: 2, title: "Lomba Mancing Gurame", spotId: 2, date: "20 Nov 2024", time: "07:00 - 14:00", fee: 75000, prize: "Rp 3.000.000", participants: 28, maxParticipants: 50, status: "upcoming", image: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80", desc: "Lomba mancing gurame jumbo." },
-    { id: 3, title: "Fun Fishing Bersama", spotId: 4, date: "05 Nov 2024", time: "16:00 - 22:00", fee: 40000, prize: "Sertifikat + Merch", participants: 60, maxParticipants: 60, status: "ongoing", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", desc: "Acara mancing santai bersama komunitas." },
-    { id: 4, title: "Mancing Charity 2024", spotId: 3, date: "10 Okt 2024", time: "08:00 - 15:00", fee: 35000, prize: "Donasi Sosial", participants: 80, maxParticipants: 80, status: "past", image: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80", desc: "Acara mancing amal untuk panti asuhan." }
+    { id: 1, title: "Turnamen Mancing Lele", spotId: 1, date: "15 Nov 2024", time: "06:00 - 12:00", fee: 50000, prize: "Rp 5.000.000", participants: 45, maxParticipants: 100, status: "upcoming", image: getImgLocal('events',1), imageFallback: getImgFallback('events',1), desc: "Turnamen mancing lele dengan hadiah utama Rp 5 juta." },
+    { id: 2, title: "Lomba Mancing Gurame", spotId: 2, date: "20 Nov 2024", time: "07:00 - 14:00", fee: 75000, prize: "Rp 3.000.000", participants: 28, maxParticipants: 50, status: "upcoming", image: getImgLocal('events',2), imageFallback: getImgFallback('events',2), desc: "Lomba mancing gurame jumbo." },
+    { id: 3, title: "Fun Fishing Bersama", spotId: 4, date: "05 Nov 2024", time: "16:00 - 22:00", fee: 40000, prize: "Sertifikat + Merch", participants: 60, maxParticipants: 60, status: "ongoing", image: getImgLocal('events',3), imageFallback: getImgFallback('events',3), desc: "Acara mancing santai bersama komunitas." },
+    { id: 4, title: "Mancing Charity 2024", spotId: 3, date: "10 Okt 2024", time: "08:00 - 15:00", fee: 35000, prize: "Donasi Sosial", participants: 80, maxParticipants: 80, status: "past", image: getImgLocal('events',4), imageFallback: getImgFallback('events',4), desc: "Acara mancing amal untuk panti asuhan." }
 ];
 
 const COMMUNITY_POSTS = [
-    { id: 1, user: "Rizky Pemancing", avatar: "https://i.pravatar.cc/150?u=rizky", time: "2 jam lalu", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", caption: "Strike 5 kali di Pemancingan Pak Budi! 🎣", likes: 45, comments: 12, spot: "Pemancingan Pak Budi", liked: false },
-    { id: 2, user: "Andi Fishing", avatar: "https://i.pravatar.cc/150?u=andi", time: "5 jam lalu", image: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80", caption: "Gurame 3kg dari Kolam Sejahtera! 🐟", likes: 78, comments: 25, spot: "Kolam Mancing Sejahtera", liked: true },
-    { id: 3, user: "Siti Angler", avatar: "https://i.pravatar.cc/150?u=siti", time: "1 hari lalu", image: "https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=800&q=80", caption: "Suasana sore di Sungai Citarum 🌅", likes: 120, comments: 34, spot: "Sungai Citarum Fishing", liked: false }
+    { id: 1, user: "Rizky Pemancing", avatar: IMG.avatars.rizky.local, avatarFallback: IMG.avatars.rizky.fallback, time: "2 jam lalu", image: getImgLocal('community',1), imageFallback: getImgFallback('community',1), caption: "Strike 5 kali di Pemancingan Pak Budi! 🎣", likes: 45, comments: 12, spot: "Pemancingan Pak Budi", liked: false },
+    { id: 2, user: "Andi Fishing", avatar: IMG.avatars.andi.local, avatarFallback: IMG.avatars.andi.fallback, time: "5 jam lalu", image: getImgLocal('community',2), imageFallback: getImgFallback('community',2), caption: "Gurame 3kg dari Kolam Sejahtera! 🐟", likes: 78, comments: 25, spot: "Kolam Mancing Sejahtera", liked: true },
+    { id: 3, user: "Siti Angler", avatar: IMG.avatars.siti.local, avatarFallback: IMG.avatars.siti.fallback, time: "1 hari lalu", image: getImgLocal('community',3), imageFallback: getImgFallback('community',3), caption: "Suasana sore di Sungai Citarum 🌅", likes: 120, comments: 34, spot: "Sungai Citarum Fishing", liked: false }
 ];
 
 const FISH_SPECIES = [
-    { name: "Lele", latin: "Clarias", image: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80", desc: "Ikan air tawar populer, mudah dipelihara.", habitat: "Kolam, sungai", bait: "Pelet, cacing, usus ayam", bestTime: "Pagi & malam", weight: "0.5 - 5 kg" },
-    { name: "Nila", latin: "Oreochromis niloticus", image: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80", desc: "Ikan nila memiliki daging tebal dan gurih.", habitat: "Kolam, waduk", bait: "Pelet, lumut, roti", bestTime: "Pagi hari", weight: "0.3 - 2 kg" },
-    { name: "Gurame", latin: "Osphronemus goramy", image: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80", desc: "Ikan gurame terkenal dengan dagingnya yang lembut.", habitat: "Kolam berlumpur", bait: "Daun talas, pelet, lumut", bestTime: "Sore hari", weight: "1 - 8 kg" },
-    { name: "Mas", latin: "Cyprinus carpio", image: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80", desc: "Ikan mas banyak dibudidayakan di Indonesia.", habitat: "Kolam, sungai", bait: "Pelet, jagung, roti", bestTime: "Pagi & sore", weight: "0.5 - 10 kg" },
-    { name: "Bawal", latin: "Colossoma macropomum", image: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=400&q=80", desc: "Ikan bawal memiliki gigi tajam dan tenaga kuat.", habitat: "Waduk, sungai besar", bait: "Buah, pelet besar", bestTime: "Siang hari", weight: "2 - 20 kg" },
-    { name: "Patin", latin: "Pangasius", image: "https://images.unsplash.com/photo-1534938665420-4193effeacc4?auto=format&fit=crop&w=400&q=80", desc: "Ikan patin berbadan licin tanpa sisik.", habitat: "Sungai besar", bait: "Pelet, ikan kecil", bestTime: "Malam hari", weight: "1 - 15 kg" }
+    { name: "Lele", latin: "Clarias", image: getImgLocal('fish','Lele'), imageFallback: getImgFallback('fish','Lele'), desc: "Ikan air tawar populer, mudah dipelihara.", habitat: "Kolam, sungai", bait: "Pelet, cacing, usus ayam", bestTime: "Pagi & malam", weight: "0.5 - 5 kg" },
+    { name: "Nila", latin: "Oreochromis niloticus", image: getImgLocal('fish','Nila'), imageFallback: getImgFallback('fish','Nila'), desc: "Ikan nila memiliki daging tebal dan gurih.", habitat: "Kolam, waduk", bait: "Pelet, lumut, roti", bestTime: "Pagi hari", weight: "0.3 - 2 kg" },
+    { name: "Gurame", latin: "Osphronemus goramy", image: getImgLocal('fish','Gurame'), imageFallback: getImgFallback('fish','Gurame'), desc: "Ikan gurame terkenal dengan dagingnya yang lembut.", habitat: "Kolam berlumpur", bait: "Daun talas, pelet, lumut", bestTime: "Sore hari", weight: "1 - 8 kg" },
+    { name: "Mas", latin: "Cyprinus carpio", image: getImgLocal('fish','Mas'), imageFallback: getImgFallback('fish','Mas'), desc: "Ikan mas banyak dibudidayakan di Indonesia.", habitat: "Kolam, sungai", bait: "Pelet, jagung, roti", bestTime: "Pagi & sore", weight: "0.5 - 10 kg" },
+    { name: "Bawal", latin: "Colossoma macropomum", image: getImgLocal('fish','Bawal'), imageFallback: getImgFallback('fish','Bawal'), desc: "Ikan bawal memiliki gigi tajam dan tenaga kuat.", habitat: "Waduk, sungai besar", bait: "Buah, pelet besar", bestTime: "Siang hari", weight: "2 - 20 kg" },
+    { name: "Patin", latin: "Pangasius", image: getImgLocal('fish','Patin'), imageFallback: getImgFallback('fish','Patin'), desc: "Ikan patin berbadan licin tanpa sisik.", habitat: "Sungai besar", bait: "Pelet, ikan kecil", bestTime: "Malam hari", weight: "1 - 15 kg" }
 ];
 
 const TIPS_DATA = [
-    { id: 1, title: "5 Tips Mancing Lele Agar Strike", category: "Teknik", readTime: "3 menit", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", content: "1. Gunakan umpan yang beraroma kuat\n2. Waktu terbaik adalah malam hari\n3. Gunakan joran yang lentur\n4. Pilih lokasi yang banyak gelembung\n5. Sabar dan konsisten" },
-    { id: 2, title: "Memilih Umpan Sesuai Jenis Ikan", category: "Umpan", readTime: "5 menit", image: "https://images.unsplash.com/photo-1582234472918-8331c77883c8?auto=format&fit=crop&w=800&q=80", content: "Setiap ikan memiliki preferensi umpan yang berbeda:\n\n• Lele: umpan beraroma kuat (usus ayam)\n• Nila: pelet halus\n• Gurame: daun talas\n• Mas: jagung manis" },
-    { id: 3, title: "Teknik Casting untuk Pemula", category: "Teknik", readTime: "7 menit", image: "https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=800&q=80", content: "Casting adalah teknik melempar umpan ke titik tertentu.\n\n1. Pegang joran dengan benar\n2. Buka bail reel\n3. Ayunkan joran ke belakang\n4. Lepas saat di depan\n5. Latihan terus menerus" },
-    { id: 4, title: "Cara Merawat Joran agar Awet", category: "Perawatan", readTime: "4 menit", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80", content: "1. Bilas dengan air tawar setelah dipakai\n2. Keringkan dengan kain lembut\n3. Simpan di tempat kering\n4. Hindari paparan sinar matahari langsung\n5. Periksa ring guide secara rutin" }
+    { id: 1, title: "5 Tips Mancing Lele Agar Strike", category: "Teknik", readTime: "3 menit", image: getImgLocal('tips',1), imageFallback: getImgFallback('tips',1), content: "1. Gunakan umpan yang beraroma kuat\n2. Waktu terbaik adalah malam hari\n3. Gunakan joran yang lentur\n4. Pilih lokasi yang banyak gelembung\n5. Sabar dan konsisten" },
+    { id: 2, title: "Memilih Umpan Sesuai Jenis Ikan", category: "Umpan", readTime: "5 menit", image: getImgLocal('tips',2), imageFallback: getImgFallback('tips',2), content: "Setiap ikan memiliki preferensi umpan yang berbeda:\n\n• Lele: umpan beraroma kuat (usus ayam)\n• Nila: pelet halus\n• Gurame: daun talas\n• Mas: jagung manis" },
+    { id: 3, title: "Teknik Casting untuk Pemula", category: "Teknik", readTime: "7 menit", image: getImgLocal('tips',3), imageFallback: getImgFallback('tips',3), content: "Casting adalah teknik melempar umpan ke titik tertentu.\n\n1. Pegang joran dengan benar\n2. Buka bail reel\n3. Ayunkan joran ke belakang\n4. Lepas saat di depan\n5. Latihan terus menerus" },
+    { id: 4, title: "Cara Merawat Joran agar Awet", category: "Perawatan", readTime: "4 menit", image: getImgLocal('tips',4), imageFallback: getImgFallback('tips',4), content: "1. Bilas dengan air tawar setelah dipakai\n2. Keringkan dengan kain lembut\n3. Simpan di tempat kering\n4. Hindari paparan sinar matahari langsung\n5. Periksa ring guide secara rutin" }
 ];
 
 const RECIPES_DATA = [
-    { id: 1, name: "Pecel Lele Crispy", time: "30 menit", level: "Mudah", image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80", ingredients: ["Lele segar 1 kg", "Bumbu kuning", "Tepung bumbu", "Sambal khas", "Lalapan"], steps: ["Bersihkan lele, lumuri jeruk nipis", "Rendam bumbu kuning 15 menit", "Balur tepung bumbu", "Goreng hingga golden brown", "Sajikan dengan sambal & lalapan"] },
-    { id: 2, name: "Gurame Bakar Madu", time: "45 menit", level: "Sedang", image: "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?auto=format&fit=crop&w=800&q=80", ingredients: ["Gurame 1 kg", "Madu 3 sdm", "Kecap manis", "Bawang putih", "Jahe"], steps: ["Bersihkan gurame, kerat-kerat", "Rendam bumbu 30 menit", "Bakar di atas bara", "Olesi madu & kecap", "Bakar hingga matang"] },
-    { id: 3, name: "Nila Goreng Sambal Matah", time: "25 menit", level: "Mudah", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=800&q=80", ingredients: ["Nila 500 gram", "Sambal matah", "Jeruk limau", "Minyak panas"], steps: ["Bersihkan nila", "Goreng hingga kering", "Buat sambal matah", "Siram minyak panas", "Sajikan"] }
+    { id: 1, name: "Pecel Lele Crispy", time: "30 menit", level: "Mudah", image: getImgLocal('recipes',1), imageFallback: getImgFallback('recipes',1), ingredients: ["Lele segar 1 kg","Bumbu kuning","Tepung bumbu","Sambal khas","Lalapan"], steps: ["Bersihkan lele, lumuri jeruk nipis","Rendam bumbu kuning 15 menit","Balur tepung bumbu","Goreng hingga golden brown","Sajikan dengan sambal & lalapan"] },
+    { id: 2, name: "Gurame Bakar Madu", time: "45 menit", level: "Sedang", image: getImgLocal('recipes',2), imageFallback: getImgFallback('recipes',2), ingredients: ["Gurame 1 kg","Madu 3 sdm","Kecap manis","Bawang putih","Jahe"], steps: ["Bersihkan gurame, kerat-kerat","Rendam bumbu 30 menit","Bakar di atas bara","Olesi madu & kecap","Bakar hingga matang"] },
+    { id: 3, name: "Nila Goreng Sambal Matah", time: "25 menit", level: "Mudah", image: getImgLocal('recipes',3), imageFallback: getImgFallback('recipes',3), ingredients: ["Nila 500 gram","Sambal matah","Jeruk limau","Minyak panas"], steps: ["Bersihkan nila","Goreng hingga kering","Buat sambal matah","Siram minyak panas","Sajikan"] }
 ];
 
 const ACHIEVEMENTS = [
@@ -68,12 +157,12 @@ const ACHIEVEMENTS = [
 ];
 
 const LEADERBOARD = [
-    { rank: 1, name: "Juragan Lele", avatar: "https://i.pravatar.cc/150?u=juragan1", points: 15420, catches: 245, medal: "🥇" },
-    { rank: 2, name: "Master Gurame", avatar: "https://i.pravatar.cc/150?u=master2", points: 12850, catches: 189, medal: "🥈" },
-    { rank: 3, name: "Haji Fishing", avatar: "https://i.pravatar.cc/150?u=haji3", points: 11200, catches: 156, medal: "🥉" },
-    { rank: 4, name: "Rizky Pemancing", avatar: "https://i.pravatar.cc/150?u=rizky", points: 1250, catches: 12, medal: "" },
-    { rank: 5, name: "Andi Fishing", avatar: "https://i.pravatar.cc/150?u=andi", points: 980, catches: 8, medal: "" },
-    { rank: 6, name: "Siti Angler", avatar: "https://i.pravatar.cc/150?u=siti", points: 750, catches: 5, medal: "" }
+    { rank: 1, name: "Juragan Lele", avatar: IMG.avatars["leaderboard-1"].local, avatarFallback: IMG.avatars["leaderboard-1"].fallback, points: 15420, catches: 245, medal: "🥇" },
+    { rank: 2, name: "Master Gurame", avatar: IMG.avatars["leaderboard-2"].local, avatarFallback: IMG.avatars["leaderboard-2"].fallback, points: 12850, catches: 189, medal: "🥈" },
+    { rank: 3, name: "Haji Fishing", avatar: IMG.avatars["leaderboard-3"].local, avatarFallback: IMG.avatars["leaderboard-3"].fallback, points: 11200, catches: 156, medal: "🥉" },
+    { rank: 4, name: "Rizky Pemancing", avatar: IMG.avatars.rizky.local, avatarFallback: IMG.avatars.rizky.fallback, points: 1250, catches: 12, medal: "" },
+    { rank: 5, name: "Andi Fishing", avatar: IMG.avatars.andi.local, avatarFallback: IMG.avatars.andi.fallback, points: 980, catches: 8, medal: "" },
+    { rank: 6, name: "Siti Angler", avatar: IMG.avatars.siti.local, avatarFallback: IMG.avatars.siti.fallback, points: 750, catches: 5, medal: "" }
 ];
 
 const PARTNERS = [
@@ -84,9 +173,9 @@ const PARTNERS = [
 ];
 
 const MERCHANDISE = [
-    { id: 1, name: "Kaos MancingYuk!", price: 85000, image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80", stock: 50 },
-    { id: 2, name: "Topi MancingYuk!", price: 65000, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80", stock: 30 },
-    { id: 3, name: "Tumbler Fishing", price: 95000, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80", stock: 20 }
+    { id: 1, name: "Kaos MancingYuk!", price: 85000, image: getImgLocal('merch',1), imageFallback: getImgFallback('merch',1), stock: 50 },
+    { id: 2, name: "Topi MancingYuk!", price: 65000, image: getImgLocal('merch',2), imageFallback: getImgFallback('merch',2), stock: 30 },
+    { id: 3, name: "Tumbler Fishing", price: 95000, image: getImgLocal('merch',3), imageFallback: getImgFallback('merch',3), stock: 20 }
 ];
 
 const WEATHER_FORECAST = {
@@ -113,7 +202,7 @@ function safeLoad(key, fallback) {
 
 let currentUser = safeLoad('my_user', null);
 let userTickets = safeLoad('my_tickets', [
-    { id: "TKT-001", spotName: "Pemancingan Pak Budi", spotId: 1, date: "25 Okt 2023", qty: 2, total: 100000, status: "Selesai", image: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80", reviewed: false }
+    { id: "TKT-001", spotName: "Pemancingan Pak Budi", spotId: 1, date: "25 Okt 2023", qty: 2, total: 100000, status: "Selesai", image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), reviewed: false }
 ]);
 let notifications = safeLoad('my_notifs', [
     { id: 1, title: "Promo Spesial!", msg: "Diskon 10% untuk booking grup minggu ini", time: "2 jam lalu", read: false },
@@ -222,25 +311,13 @@ function renderOnboarding() {
         </div>
     `;
 }
-
-function nextOnboarding() {
-    if (currentOnboardingStep < 2) {
-        currentOnboardingStep++;
-        renderOnboarding();
-    } else {
-        finishOnboarding();
-    }
-}
-
+function nextOnboarding() { if (currentOnboardingStep < 2) { currentOnboardingStep++; renderOnboarding(); } else finishOnboarding(); }
 function skipOnboarding() { finishOnboarding(); }
-
 function finishOnboarding() {
-    onboardingDone = true;
-    save();
+    onboardingDone = true; save();
     document.getElementById('onboardingModal').classList.add('hidden');
     document.getElementById('onboardingModal').classList.remove('flex');
-    if (!currentUser) openAuth();
-    else switchTab('home');
+    if (!currentUser) openAuth(); else switchTab('home');
 }
 
 // ==========================================
@@ -268,7 +345,7 @@ function handleLogin(e) {
     else {
         currentUser = {
             name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Pemancing",
-            email, avatar: "https://i.pravatar.cc/150?u=" + email,
+            email, avatar: IMG.avatars.rizky.local, avatarFallback: IMG.avatars.rizky.fallback,
             level: "Pemancing Aktif", points: 1250,
             bio: "Pecinta mancing sejati 🎣",
             joinDate: "Januari 2024", type: "pemancing"
@@ -288,7 +365,7 @@ function handleSignup(e) {
     const type = document.getElementById('signupType').value;
     currentUser = {
         name, email, type,
-        avatar: "https://i.pravatar.cc/150?u=" + email,
+        avatar: IMG.avatars.default.local, avatarFallback: IMG.avatars.default.fallback,
         level: type === 'owner' ? "Pemilik Pemancingan" : "Pemancing Baru",
         points: 100, bio: "Baru bergabung di MancingYuk!",
         joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
@@ -303,16 +380,12 @@ function handleSignup(e) {
 
 function logout() {
     if (!confirm('Yakin ingin keluar?')) return;
-    currentUser = null;
-    save();
-    openAuth();
+    currentUser = null; save(); openAuth();
     showToast('Anda telah keluar', 'info');
 }
-
 function openAuth() {
     const m = document.getElementById('authModal');
-    m.classList.remove('hidden');
-    m.classList.add('flex');
+    m.classList.remove('hidden'); m.classList.add('flex');
 }
 
 // ==========================================
@@ -357,15 +430,13 @@ function renderHome(container) {
         premiumSpots.forEach(s => {
             premiumHtml += '<div onclick="openDetail(' + s.id + ')" class="min-w-[200px] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">';
             premiumHtml += '<div class="relative h-28">';
-            premiumHtml += '<img src="' + s.image + '" class="w-full h-full object-cover" onerror="this.src=\'https://via.placeholder.com/400x200\'">';
+            premiumHtml += imgTag(s.image, s.imageFallback, s.name, "w-full h-full object-cover");
             premiumHtml += '<div class="absolute top-2 left-2 bg-yellow-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">⭐ PREMIUM</div>';
             premiumHtml += '<div class="absolute bottom-2 right-2 bg-white bg-opacity-90 px-2 py-0.5 rounded text-[10px] font-bold">★ ' + s.rating + '</div>';
             premiumHtml += '</div>';
-            premiumHtml += '<div class="p-3">';
-            premiumHtml += '<h3 class="text-xs font-bold text-dark truncate">' + s.name + '</h3>';
+            premiumHtml += '<div class="p-3"><h3 class="text-xs font-bold text-dark truncate">' + s.name + '</h3>';
             premiumHtml += '<p class="text-[10px] text-gray-500 mb-1">' + s.city + ' • ' + s.distance + ' km</p>';
-            premiumHtml += '<p class="text-sm font-bold text-primary">Rp ' + s.price.toLocaleString('id-ID') + '</p>';
-            premiumHtml += '</div></div>';
+            premiumHtml += '<p class="text-sm font-bold text-primary">Rp ' + s.price.toLocaleString('id-ID') + '</p></div></div>';
         });
 
         const steps = [
@@ -379,8 +450,7 @@ function renderHome(container) {
             howHtml += '<div class="min-w-[130px] bg-white p-3 rounded-2xl shadow-sm border border-gray-100">';
             howHtml += '<div class="w-8 h-8 bg-blue-100 text-primary rounded-full flex items-center justify-center font-bold text-sm mb-2">' + s.n + '</div>';
             howHtml += '<h4 class="font-semibold text-xs text-dark">' + s.t + '</h4>';
-            howHtml += '<p class="text-[10px] text-gray-500 mt-1 leading-tight">' + s.d + '</p>';
-            howHtml += '</div>';
+            howHtml += '<p class="text-[10px] text-gray-500 mt-1 leading-tight">' + s.d + '</p></div>';
         });
 
         const w = WEATHER_FORECAST.today;
@@ -395,10 +465,7 @@ function renderHome(container) {
                     </div>
                     <div class="bg-blue-50 px-3 py-2 rounded-xl flex items-center gap-2">
                         <span class="text-xl">${w.icon}</span>
-                        <div>
-                            <p class="text-xs font-bold text-dark">${w.temp}°C</p>
-                            <p class="text-[9px] text-gray-500">${w.condition}</p>
-                        </div>
+                        <div><p class="text-xs font-bold text-dark">${w.temp}°C</p><p class="text-[9px] text-gray-500">${w.condition}</p></div>
                     </div>
                 </div>
                 <div class="flex items-center bg-gray-100 rounded-2xl p-1 border border-gray-200">
@@ -438,7 +505,6 @@ function renderHome(container) {
                 </button>
             </div>
 
-            <!-- Fishing Score -->
             <div class="px-5 mt-4">
                 <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-4 text-white shadow-lg">
                     <div class="flex justify-between items-center">
@@ -447,10 +513,7 @@ function renderHome(container) {
                             <p class="text-3xl font-bold mt-1">${w.score}/100</p>
                             <p class="text-xs opacity-90 mt-1">${w.score >= 80 ? '🔥 Waktu terbaik mancing!' : w.score >= 60 ? '👍 Kondisi cukup baik' : '⚠️ Kurang ideal'}</p>
                         </div>
-                        <div class="text-right text-xs space-y-1">
-                            <p>💧 ${w.humidity}%</p>
-                            <p>💨 ${w.wind}</p>
-                        </div>
+                        <div class="text-right text-xs space-y-1"><p>💧 ${w.humidity}%</p><p>💨 ${w.wind}</p></div>
                     </div>
                     <div class="flex gap-2 mt-3 overflow-x-auto hide-scrollbar">
                         ${['today','tomorrow','day3'].map((k, i) => {
@@ -462,7 +525,6 @@ function renderHome(container) {
                 </div>
             </div>
 
-            <!-- Leaderboard Preview -->
             <div class="px-5 mt-6">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="font-bold text-dark">🏆 Top Anglers</h2>
@@ -472,11 +534,8 @@ function renderHome(container) {
                     ${LEADERBOARD.slice(0, 3).map(l => `
                         <div class="flex items-center py-2 border-b border-gray-100 last:border-0">
                             <span class="text-2xl w-8">${l.medal}</span>
-                            <img src="${l.avatar}" class="w-9 h-9 rounded-full object-cover mx-2">
-                            <div class="flex-1">
-                                <p class="text-xs font-bold text-dark">${l.name}</p>
-                                <p class="text-[10px] text-gray-500">${l.catches} tangkapan</p>
-                            </div>
+                            ${imgTag(l.avatar, l.avatarFallback, l.name, "w-9 h-9 rounded-full object-cover mx-2")}
+                            <div class="flex-1"><p class="text-xs font-bold text-dark">${l.name}</p><p class="text-[10px] text-gray-500">${l.catches} tangkapan</p></div>
                             <p class="text-xs font-bold text-primary">${l.points.toLocaleString()}</p>
                         </div>
                     `).join('')}
@@ -537,11 +596,7 @@ function handleSearch(val) {
     const c = document.getElementById('spotContainer');
     if (c) renderSpots(getFilteredSpots());
 }
-
-function clearSearch() {
-    currentSearchQuery = '';
-    renderHome(document.getElementById('app-content'));
-}
+function clearSearch() { currentSearchQuery = ''; renderHome(document.getElementById('app-content')); }
 
 function getFilteredSpots() {
     let filtered = spots.filter(s => {
@@ -577,7 +632,7 @@ function renderSpots(data) {
             : '<span class="bg-red-100 text-red-700 px-2 py-1 rounded-md text-[10px] font-bold">Slot Penuh</span>';
         html += '<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">';
         html += '<div class="relative h-40">';
-        html += '<img src="' + spot.image + '" class="w-full h-full object-cover" onerror="this.src=\'https://via.placeholder.com/400x200\'">';
+        html += imgTag(spot.image, spot.imageFallback, spot.name, "w-full h-full object-cover");
         html += '<div class="absolute top-3 right-3 bg-white bg-opacity-90 px-2 py-1 rounded-lg text-xs font-bold text-gray-800 flex items-center space-x-1"><span class="text-yellow-500">★</span><span>' + spot.rating + '</span><span class="text-gray-400 font-normal">(' + spot.reviews + ')</span></div>';
         html += '<div class="absolute bottom-3 left-3">' + status + '</div>';
         if (spot.premium) html += '<div class="absolute top-3 left-3 bg-yellow-400 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">⭐</div>';
@@ -645,14 +700,10 @@ function filterCategory(cat) {
     if (document.getElementById('nav-explore').classList.contains('text-primary')) renderExplore(document.getElementById('app-content'));
     else renderHome(document.getElementById('app-content'));
 }
-
-function setSort(sort) {
-    currentSort = sort;
-    renderExplore(document.getElementById('app-content'));
-}
+function setSort(sort) { currentSort = sort; renderExplore(document.getElementById('app-content')); }
 
 // ==========================================
-// EVENTS (compact - same as before)
+// EVENTS
 // ==========================================
 function renderEvents(container) {
     try {
@@ -677,7 +728,8 @@ function renderEvents(container) {
             else if (e.status === 'upcoming') btnHtml = '<button class="flex-1 bg-red-100 text-red-500 py-2 rounded-xl text-xs font-bold" disabled>Penuh</button>';
             else btnHtml = '<button class="flex-1 bg-gray-100 text-gray-400 py-2 rounded-xl text-xs font-bold" disabled>Selesai</button>';
             eventsHtml += '<div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">';
-            eventsHtml += '<div class="relative h-36"><img src="' + e.image + '" class="w-full h-full object-cover" onerror="this.src=\'https://via.placeholder.com/400x200\'">';
+            eventsHtml += '<div class="relative h-36">';
+            eventsHtml += imgTag(e.image, e.imageFallback, e.title, "w-full h-full object-cover");
             eventsHtml += '<div class="absolute top-3 left-3 ' + statusClass + ' text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">' + statusLabel + '</div></div>';
             eventsHtml += '<div class="p-4"><h3 class="font-bold text-dark mb-1">' + e.title + '</h3>';
             eventsHtml += '<p class="text-xs text-gray-500 mb-1">📅 ' + e.date + ' • ' + e.time + '</p>';
@@ -706,7 +758,7 @@ function openEventDetail(id) {
             <h3 class="text-xl font-bold text-dark flex-1">${e.title}</h3>
             <button onclick="closeEventDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        <img src="${e.image}" class="w-full h-44 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(e.image, e.imageFallback, e.title, "w-full h-44 object-cover rounded-2xl mb-4")}
         <p class="text-sm text-gray-600 mb-4">${e.desc}</p>
         <div class="bg-gray-50 p-4 rounded-2xl mb-4 space-y-2 text-sm">
             <div class="flex justify-between"><span class="text-gray-500">📅</span><span class="font-semibold">${e.date}</span></div>
@@ -766,11 +818,12 @@ function renderCommunity(container) {
         let postsHtml = '';
         allPosts.forEach(p => {
             postsHtml += '<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">';
-            postsHtml += '<div class="flex items-center p-3"><img src="' + p.avatar + '" class="w-10 h-10 rounded-full object-cover" onerror="this.src=\'https://i.pravatar.cc/150\'">';
+            postsHtml += '<div class="flex items-center p-3">';
+            postsHtml += imgTag(p.avatar, p.avatarFallback || IMG.avatars.default.fallback, p.user, "w-10 h-10 rounded-full object-cover");
             postsHtml += '<div class="ml-3 flex-1"><p class="text-sm font-bold text-dark">' + p.user + '</p>';
             postsHtml += '<p class="text-[10px] text-gray-400">' + p.time + (p.spot ? ' • 📍 ' + p.spot : '') + '</p></div>';
             postsHtml += '<button onclick="sharePost(' + p.id + ')" class="text-gray-400 p-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg></button></div>';
-            postsHtml += '<img src="' + p.image + '" class="w-full h-56 object-cover" onerror="this.src=\'https://via.placeholder.com/400x300\'">';
+            postsHtml += imgTag(p.image, p.imageFallback, p.caption, "w-full h-56 object-cover");
             postsHtml += '<div class="p-4"><p class="text-sm text-gray-700 leading-relaxed mb-3">' + p.caption + '</p>';
             postsHtml += '<div class="flex items-center gap-4 pt-3 border-t">';
             postsHtml += '<button onclick="toggleLike(' + p.id + ')" class="flex items-center gap-1 text-sm ' + (p.liked ? 'text-red-500' : 'text-gray-500') + '">';
@@ -791,10 +844,8 @@ function toggleLike(id) {
     const allPosts = [...myPosts, ...communityPosts];
     const p = allPosts.find(x => x.id === id);
     if (!p) return;
-    p.liked = !p.liked;
-    p.likes += p.liked ? 1 : -1;
-    save();
-    renderCommunity(document.getElementById('app-content'));
+    p.liked = !p.liked; p.likes += p.liked ? 1 : -1;
+    save(); renderCommunity(document.getElementById('app-content'));
 }
 
 function sharePost(id) {
@@ -814,20 +865,19 @@ function openPostModal() {
     document.getElementById('postModal').classList.remove('hidden');
     document.getElementById('postModal').classList.add('flex');
 }
-
 function closePostModal() {
     document.getElementById('postModal').classList.add('hidden');
     document.getElementById('postModal').classList.remove('flex');
 }
 
 function submitPost() {
-    const img = document.getElementById('postImage').value.trim() || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80';
+    const img = document.getElementById('postImage').value.trim() || getImgLocal('community',1);
+    const imgFallback = document.getElementById('postImage').value.trim() || getImgFallback('community',1);
     const caption = document.getElementById('postCaption').value.trim();
     const spot = document.getElementById('postSpot').value;
     if (!caption) return showToast('Cerita tidak boleh kosong', 'error');
-    myPosts.unshift({ id: Date.now(), user: currentUser.name, avatar: currentUser.avatar, time: "Baru saja", image: img, caption, likes: 0, comments: 0, spot, liked: false });
-    checkAchievements();
-    save();
+    myPosts.unshift({ id: Date.now(), user: currentUser.name, avatar: currentUser.avatar, avatarFallback: currentUser.avatarFallback, time: "Baru saja", image: img, imageFallback: imgFallback, caption, likes: 0, comments: 0, spot, liked: false });
+    checkAchievements(); save();
     closePostModal();
     showToast('Postingan dibagikan!');
     renderCommunity(document.getElementById('app-content'));
@@ -850,15 +900,16 @@ function renderProfile(container) {
         const tier = currentUser.points >= 5000 ? { name: "Gold", color: "text-yellow-600", bg: "bg-yellow-100" } :
                      currentUser.points >= 2000 ? { name: "Silver", color: "text-gray-600", bg: "bg-gray-200" } :
                      { name: "Bronze", color: "text-orange-700", bg: "bg-orange-100" };
-
         const ownerBtn = currentUser.type === 'owner'
             ? '<button onclick="openOwnerDashboard()" class="w-full bg-gradient-to-r from-secondary to-green-400 text-white py-4 rounded-2xl font-bold shadow-lg mb-4 flex items-center justify-center gap-2">🏪 Dashboard Pemilik</button>'
             : '';
+        const userAvatar = currentUser.avatar || IMG.avatars.default.local;
+        const userAvatarFb = currentUser.avatarFallback || IMG.avatars.default.fallback;
 
         container.innerHTML = `
             <div class="px-5 pt-6 pb-4">
                 <div class="flex items-center space-x-4 mb-4">
-                    <img src="${currentUser.avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-primary" onerror="this.src='https://i.pravatar.cc/150'">
+                    ${imgTag(userAvatar, userAvatarFb, currentUser.name, "w-16 h-16 rounded-full object-cover border-2 border-primary")}
                     <div class="flex-1">
                         <h2 class="text-lg font-bold text-dark">${currentUser.name}</h2>
                         <p class="text-xs text-gray-500">${currentUser.email}</p>
@@ -868,17 +919,10 @@ function renderProfile(container) {
                         </div>
                     </div>
                 </div>
-
                 <div onclick="openLoyalty()" class="bg-gradient-to-r from-primary to-blue-400 rounded-2xl p-4 text-white shadow-lg mb-4 cursor-pointer pulse-glow">
                     <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-blue-100">Poin MancingYuk</p>
-                            <p class="text-2xl font-bold">${currentUser.points.toLocaleString('id-ID')}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-blue-100">Achievements</p>
-                            <p class="text-lg font-bold">${unlockedAch}/${achievements.length}</p>
-                        </div>
+                        <div><p class="text-xs text-blue-100">Poin MancingYuk</p><p class="text-2xl font-bold">${currentUser.points.toLocaleString('id-ID')}</p></div>
+                        <div class="text-right"><p class="text-[10px] text-blue-100">Achievements</p><p class="text-lg font-bold">${unlockedAch}/${achievements.length}</p></div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white border-opacity-20 text-center">
                         <div><p class="text-[9px] text-blue-100">Trip</p><p class="font-bold text-sm">${totalTrips}x</p></div>
@@ -886,7 +930,6 @@ function renderProfile(container) {
                         <div><p class="text-[9px] text-blue-100">Total Berat</p><p class="font-bold text-sm">${totalWeight.toFixed(1)}kg</p></div>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-3 gap-2 mb-4">
                     <button onclick="openCatchLog()" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
                         <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl mb-1">📖</div>
@@ -901,67 +944,31 @@ function renderProfile(container) {
                         <span class="text-[10px] font-medium text-dark">Ranking</span>
                     </button>
                 </div>
-
                 <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
                     <p class="text-xs text-gray-500 mb-1">Bio</p>
                     <p class="text-sm text-dark">${currentUser.bio || 'Belum ada bio'}</p>
                     <p class="text-[10px] text-gray-400 mt-2">Bergabung sejak ${currentUser.joinDate}</p>
                 </div>
-
                 ${ownerBtn}
-
                 <h3 class="font-bold text-dark mb-3">Konten & Edukasi</h3>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 mb-4">
-                    <button onclick="openFishGuide()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🐟</div><span class="text-sm font-medium">Panduan Ikan</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="openTips()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">💡</div><span class="text-sm font-medium">Tips & Trik Mancing</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="openRecipes()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">🍳</div><span class="text-sm font-medium">Resep Masakan</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                    <button onclick="openFishGuide()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🐟</div><span class="text-sm font-medium">Panduan Ikan</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openTips()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">💡</div><span class="text-sm font-medium">Tips & Trik</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openRecipes()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">🍳</div><span class="text-sm font-medium">Resep Masakan</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
-
                 <h3 class="font-bold text-dark mb-3">Akun & Pengaturan</h3>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 mb-4">
-                    <button onclick="switchTab('tickets')" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🎫</div><span class="text-sm font-medium">Tiket Saya</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="openEditProfile()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">👤</div><span class="text-sm font-medium">Edit Profil</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="openPassword()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">🔒</div><span class="text-sm font-medium">Ubah Password</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="showHistory()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">📜</div><span class="text-sm font-medium">Riwayat Transaksi</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                    <button onclick="switchTab('tickets')" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🎫</div><span class="text-sm font-medium">Tiket Saya</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openEditProfile()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">👤</div><span class="text-sm font-medium">Edit Profil</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openPassword()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">🔒</div><span class="text-sm font-medium">Ubah Password</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="showHistory()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">📜</div><span class="text-sm font-medium">Riwayat Transaksi</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
-
                 <h3 class="font-bold text-dark mb-3">Lainnya</h3>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 mb-4">
-                    <button onclick="showPartners()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">🛒</div><span class="text-sm font-medium">Toko Partner</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="showMerch()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">👕</div><span class="text-sm font-medium">Merchandise</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
-                    <button onclick="openAbout()" class="w-full flex items-center justify-between p-4">
-                        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">ℹ️</div><span class="text-sm font-medium">Visi & Misi</span></div>
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                    <button onclick="showPartners()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">🛒</div><span class="text-sm font-medium">Toko Partner</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="showMerch()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">👕</div><span class="text-sm font-medium">Merchandise</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openAbout()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">ℹ️</div><span class="text-sm font-medium">Visi & Misi</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
-
                 <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-3.5 rounded-xl font-bold border border-red-100 mb-6">Keluar Akun</button>
                 <div class="text-center pb-4">
                     <p class="text-xs text-gray-400">MancingYuk! v2.1.0</p>
@@ -986,7 +993,7 @@ function openFishGuide() {
     html += '<div class="grid grid-cols-2 gap-3">';
     FISH_SPECIES.forEach((f, i) => {
         html += '<div onclick="openFishDetail(' + i + ')" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm cursor-pointer">';
-        html += '<img src="' + f.image + '" class="w-full h-24 object-cover" onerror="this.src=\'https://via.placeholder.com/200\'">';
+        html += imgTag(f.image, f.imageFallback, f.name, "w-full h-24 object-cover");
         html += '<div class="p-3"><h4 class="text-xs font-bold">' + f.name + '</h4>';
         html += '<p class="text-[9px] text-gray-500 italic">' + f.latin + '</p>';
         html += '<p class="text-[9px] text-gray-400 mt-1">' + f.weight + '</p></div></div>';
@@ -1007,7 +1014,7 @@ function openFishDetail(i) {
             <h3 class="text-lg font-bold">${f.name}</h3>
             <button onclick="openFishGuide()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
         </div>
-        <img src="${f.image}" class="w-full h-40 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(f.image, f.imageFallback, f.name, "w-full h-40 object-cover rounded-2xl mb-4")}
         <p class="text-xs italic text-gray-500 mb-2">${f.latin}</p>
         <p class="text-sm text-gray-700 mb-4">${f.desc}</p>
         <div class="bg-blue-50 p-4 rounded-2xl space-y-2 text-xs mb-4">
@@ -1031,7 +1038,7 @@ function openTips() {
     html += '<div class="space-y-3">';
     TIPS_DATA.forEach((t, i) => {
         html += '<div onclick="openTipDetail(' + i + ')" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm cursor-pointer">';
-        html += '<div class="flex"><img src="' + t.image + '" class="w-20 h-20 object-cover" onerror="this.src=\'https://via.placeholder.com/100\'">';
+        html += '<div class="flex">' + imgTag(t.image, t.imageFallback, t.title, "w-20 h-20 object-cover");
         html += '<div class="p-3 flex-1"><span class="inline-block bg-blue-100 text-primary text-[9px] px-2 py-0.5 rounded font-bold mb-1">' + t.category + '</span>';
         html += '<h4 class="text-xs font-bold">' + t.title + '</h4>';
         html += '<p class="text-[10px] text-gray-500 mt-1">📖 ' + t.readTime + '</p></div></div></div>';
@@ -1052,7 +1059,7 @@ function openTipDetail(i) {
             <h3 class="text-lg font-bold flex-1">${t.title}</h3>
             <button onclick="openTips()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
         </div>
-        <img src="${t.image}" class="w-full h-40 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(t.image, t.imageFallback, t.title, "w-full h-40 object-cover rounded-2xl mb-4")}
         <div class="flex gap-2 mb-4">
             <span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">${t.category}</span>
             <span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">📖 ${t.readTime}</span>
@@ -1073,7 +1080,7 @@ function openRecipes() {
     html += '<div class="space-y-3">';
     RECIPES_DATA.forEach((r, i) => {
         html += '<div onclick="openRecipeDetail(' + i + ')" class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm cursor-pointer">';
-        html += '<img src="' + r.image + '" class="w-full h-32 object-cover" onerror="this.src=\'https://via.placeholder.com/400x200\'">';
+        html += imgTag(r.image, r.imageFallback, r.name, "w-full h-32 object-cover");
         html += '<div class="p-3"><h4 class="text-sm font-bold">' + r.name + '</h4>';
         html += '<div class="flex gap-3 mt-1 text-[10px] text-gray-500"><span>⏱️ ' + r.time + '</span><span>📊 ' + r.level + '</span></div></div></div>';
     });
@@ -1087,15 +1094,15 @@ function openRecipeDetail(i) {
     const r = RECIPES_DATA[i];
     if (!r) return;
     const modal = document.getElementById('notifModal');
-    let ingHtml = r.ingredients.map(x => '<li>' + x + '</li>').join('');
-    let stepHtml = r.steps.map((x, idx) => '<div class="flex gap-3 mb-2"><span class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">' + (idx + 1) + '</span><p class="text-xs text-gray-700 pt-1">' + x + '</p></div>').join('');
+    const ingHtml = r.ingredients.map(x => '<li>' + x + '</li>').join('');
+    const stepHtml = r.steps.map((x, idx) => '<div class="flex gap-3 mb-2"><span class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">' + (idx + 1) + '</span><p class="text-xs text-gray-700 pt-1">' + x + '</p></div>').join('');
     document.getElementById('notifContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-bold flex-1">${r.name}</h3>
             <button onclick="openRecipes()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
         </div>
-        <img src="${r.image}" class="w-full h-40 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(r.image, r.imageFallback, r.name, "w-full h-40 object-cover rounded-2xl mb-4")}
         <div class="flex gap-2 mb-4">
             <span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">⏱️ ${r.time}</span>
             <span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">📊 ${r.level}</span>
@@ -1163,7 +1170,6 @@ function openAddCatch() {
     document.getElementById('addCatchModal').classList.remove('hidden');
     document.getElementById('addCatchModal').classList.add('flex');
 }
-
 function closeAddCatch() {
     document.getElementById('addCatchModal').classList.add('hidden');
     document.getElementById('addCatchModal').classList.remove('flex');
@@ -1177,8 +1183,7 @@ function saveCatch() {
     if (!weight || weight <= 0) return showToast('Berat tidak valid', 'error');
     userCatches.unshift({ id: Date.now(), fish, weight, spot, date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }), note });
     if (currentUser) currentUser.points += 100;
-    checkAchievements();
-    save();
+    checkAchievements(); save();
     closeAddCatch();
     showToast('Tangkapan dicatat! +100 poin');
     openCatchLog();
@@ -1200,8 +1205,7 @@ function openAchievements() {
         html += '<div class="text-3xl mb-2">' + a.icon + '</div>';
         html += '<p class="text-xs font-bold text-dark">' + a.name + '</p>';
         html += '<p class="text-[10px] text-gray-500 mt-1">' + a.desc + '</p>';
-        html += '<p class="text-[10px] font-bold mt-2 ' + (a.unlocked ? 'text-green-600' : 'text-gray-400') + '">' + (a.unlocked ? '✓ +' + a.points + ' poin' : '🔒 Belum terbuka') + '</p>';
-        html += '</div>';
+        html += '<p class="text-[10px] font-bold mt-2 ' + (a.unlocked ? 'text-green-600' : 'text-gray-400') + '">' + (a.unlocked ? '✓ +' + a.points + ' poin' : '🔒 Belum terbuka') + '</p></div>';
     });
     html += '</div>';
     document.getElementById('notifContent').innerHTML = html;
@@ -1212,55 +1216,14 @@ function openAchievements() {
 function checkAchievements() {
     if (!currentUser) return;
     let changed = false;
-    // First booking
-    if (!achievements[0].unlocked && userTickets.length > 0) {
-        achievements[0].unlocked = true;
-        currentUser.points += achievements[0].points;
-        notifications.unshift({ id: Date.now(), title: "🏅 Achievement!", msg: "Unlocked: " + achievements[0].name, time: "Baru", read: false });
-        changed = true;
-    }
-    // 5 bookings
-    if (!achievements[1].unlocked && userTickets.length >= 5) {
-        achievements[1].unlocked = true;
-        currentUser.points += achievements[1].points;
-        changed = true;
-    }
-    // 10 catches
-    if (!achievements[2].unlocked && userCatches.length >= 10) {
-        achievements[2].unlocked = true;
-        currentUser.points += achievements[2].points;
-        changed = true;
-    }
-    // Big catch 5kg+
-    if (!achievements[3].unlocked && userCatches.some(c => c.weight >= 5)) {
-        achievements[3].unlocked = true;
-        currentUser.points += achievements[3].points;
-        changed = true;
-    }
-    // 3 reviews
-    if (!achievements[4].unlocked && userTickets.filter(t => t.reviewed).length >= 3) {
-        achievements[4].unlocked = true;
-        currentUser.points += achievements[4].points;
-        changed = true;
-    }
-    // Event join
-    if (!achievements[5].unlocked && userEvents.length >= 1) {
-        achievements[5].unlocked = true;
-        currentUser.points += achievements[5].points;
-        changed = true;
-    }
-    // 3 posts
-    if (!achievements[6].unlocked && myPosts.length >= 3) {
-        achievements[6].unlocked = true;
-        currentUser.points += achievements[6].points;
-        changed = true;
-    }
-    // 5000 points
-    if (!achievements[7].unlocked && currentUser.points >= 5000) {
-        achievements[7].unlocked = true;
-        currentUser.points += achievements[7].points;
-        changed = true;
-    }
+    if (!achievements[0].unlocked && userTickets.length > 0) { achievements[0].unlocked = true; currentUser.points += achievements[0].points; changed = true; }
+    if (!achievements[1].unlocked && userTickets.length >= 5) { achievements[1].unlocked = true; currentUser.points += achievements[1].points; changed = true; }
+    if (!achievements[2].unlocked && userCatches.length >= 10) { achievements[2].unlocked = true; currentUser.points += achievements[2].points; changed = true; }
+    if (!achievements[3].unlocked && userCatches.some(c => c.weight >= 5)) { achievements[3].unlocked = true; currentUser.points += achievements[3].points; changed = true; }
+    if (!achievements[4].unlocked && userTickets.filter(t => t.reviewed).length >= 3) { achievements[4].unlocked = true; currentUser.points += achievements[4].points; changed = true; }
+    if (!achievements[5].unlocked && userEvents.length >= 1) { achievements[5].unlocked = true; currentUser.points += achievements[5].points; changed = true; }
+    if (!achievements[6].unlocked && myPosts.length >= 3) { achievements[6].unlocked = true; currentUser.points += achievements[6].points; changed = true; }
+    if (!achievements[7].unlocked && currentUser.points >= 5000) { achievements[7].unlocked = true; currentUser.points += achievements[7].points; changed = true; }
     if (changed) save();
 }
 
@@ -1285,11 +1248,10 @@ function openLeaderboard() {
         const medal = b.rank === 1 ? '🥇' : b.rank === 2 ? '🥈' : b.rank === 3 ? '🥉' : b.rank;
         html += '<div class="flex items-center p-3 rounded-xl ' + (isMe ? 'bg-blue-50 border border-primary' : 'bg-white border border-gray-100') + '">';
         html += '<span class="text-lg w-8 text-center font-bold">' + medal + '</span>';
-        html += '<img src="' + b.avatar + '" class="w-10 h-10 rounded-full object-cover mx-2">';
+        html += imgTag(b.avatar, b.avatarFallback, b.name, "w-10 h-10 rounded-full object-cover mx-2");
         html += '<div class="flex-1"><p class="text-xs font-bold text-dark">' + b.name + (isMe ? ' (Anda)' : '') + '</p>';
         html += '<p class="text-[10px] text-gray-500">' + b.catches + ' tangkapan</p></div>';
-        html += '<p class="text-sm font-bold text-primary">' + b.points.toLocaleString('id-ID') + '</p>';
-        html += '</div>';
+        html += '<p class="text-sm font-bold text-primary">' + b.points.toLocaleString('id-ID') + '</p></div>';
     });
     html += '</div>';
     document.getElementById('notifContent').innerHTML = html;
@@ -1342,7 +1304,7 @@ function openTicketDetail(index) {
             <h3 class="text-lg font-bold">E-Tiket</h3>
             <button onclick="closeTicketDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        <img src="${t.image}" class="w-full h-40 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(t.image, t.imageFallback || getImgFallback('spots',1), t.spotName, "w-full h-40 object-cover rounded-2xl mb-4")}
         <div class="bg-white border-2 border-dashed border-primary rounded-2xl p-5 mb-4">
             <p class="text-xs text-gray-500 mb-1">ID Tiket</p>
             <p class="text-lg font-bold text-dark mb-3">${t.id}</p>
@@ -1402,6 +1364,7 @@ function openDetail(id) {
     const facilitiesHtml = selectedSpot.facilities.map(f => '<span class="bg-gray-100 text-gray-600 text-[10px] px-3 py-1 rounded-full whitespace-nowrap">' + f + '</span>').join('');
     const premiumBadge = selectedSpot.premium ? '<div class="inline-block bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full mb-2">⭐ PREMIUM</div>' : '';
     const disabled = selectedSpot.slots === 0;
+    const imgFb = selectedSpot.imageFallback || getImgFallback('spots',1);
 
     document.getElementById('detailContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
@@ -1414,12 +1377,10 @@ function openDetail(id) {
             </div>
             <button onclick="closeDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        <img src="${selectedSpot.image}" class="w-full h-48 object-cover rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/400x200'">
+        ${imgTag(selectedSpot.image, imgFb, selectedSpot.name, "w-full h-48 object-cover rounded-2xl mb-4")}
         <div class="flex space-x-2 mb-4 overflow-x-auto hide-scrollbar">${facilitiesHtml}</div>
         <p class="text-xs text-gray-500 leading-relaxed mb-4">${selectedSpot.description}</p>
-        <button onclick="openChat(${selectedSpot.id}, '${selectedSpot.owner}')" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2">
-            💬 Chat dengan ${selectedSpot.owner}
-        </button>
+        <button onclick="openChat(${selectedSpot.id}, '${selectedSpot.owner}')" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2">💬 Chat dengan ${selectedSpot.owner}</button>
         <div class="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
             <h4 class="font-bold text-primary text-sm mb-2">Transparansi Harga</h4>
             <div class="flex justify-between text-xs text-gray-600 mb-1"><span>Harga Tiket</span><span class="font-semibold">Rp ${selectedSpot.price.toLocaleString('id-ID')}</span></div>
@@ -1474,10 +1435,12 @@ function shareSpot(id) {
 function openChat(spotId, ownerName) {
     currentChatOwner = ownerName;
     document.getElementById('chatTitle').innerText = ownerName;
-    document.getElementById('chatAvatar').src = 'https://i.pravatar.cc/100?u=' + encodeURIComponent(ownerName);
-    const msgs = chatHistory[ownerName] || [
-        { from: 'them', text: 'Halo! Ada yang bisa dibantu?', time: '10:00' }
-    ];
+    // Set avatar dengan fallback
+    const avatarEl = document.getElementById('chatAvatar');
+    avatarEl.src = IMG.avatars.owner.local;
+    avatarEl.dataset.fallback = IMG.avatars.owner.fallback;
+    avatarEl.onerror = function() { handleImgError(this); };
+    const msgs = chatHistory[ownerName] || [{ from: 'them', text: 'Halo! Ada yang bisa dibantu?', time: '10:00' }];
     chatHistory[ownerName] = msgs;
     renderChatMessages();
     document.getElementById('chatModal').classList.remove('hidden');
@@ -1510,14 +1473,12 @@ function sendChat() {
     msgs.push({ from: 'me', text, time: now });
     input.value = '';
     chatHistory[currentChatOwner] = msgs;
-    save();
-    renderChatMessages();
+    save(); renderChatMessages();
     setTimeout(() => {
         const replies = ['Baik, siap!', 'Terima kasih infonya 🙏', 'Boleh, silakan datang ya!', 'Oke, saya catat.', 'Baik kak, ditunggu!'];
         const reply = replies[Math.floor(Math.random() * replies.length)];
         msgs.push({ from: 'them', text: reply, time: now });
-        save();
-        renderChatMessages();
+        save(); renderChatMessages();
     }, 1000);
 }
 
@@ -1582,10 +1543,10 @@ function processPayment() {
         const fmtDate = new Date(bookingData.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         const newTicket = {
             id: 'TKT-' + String(Date.now()).slice(-6),
-            spotName: bookingData.spot.name,
-            spotId: bookingData.spot.id,
+            spotName: bookingData.spot.name, spotId: bookingData.spot.id,
             date: fmtDate, qty: bookingData.qty, total: finalTotal,
-            status: "Aktif", image: bookingData.spot.image, reviewed: false
+            status: "Aktif", image: bookingData.spot.image,
+            imageFallback: bookingData.spot.imageFallback, reviewed: false
         };
         userTickets.unshift(newTicket);
         const spotRef = spots.find(s => s.id === bookingData.spot.id);
@@ -1596,9 +1557,7 @@ function processPayment() {
         }
         notifications.unshift({ id: Date.now(), title: "Booking Berhasil", msg: "Tiket " + bookingData.spot.name + " aktif", time: "Baru saja", read: false });
         ownerBookings.unshift({ id: 'B-' + Date.now(), customer: currentUser.name, spot: bookingData.spot.name, date: fmtDate, qty: bookingData.qty, total: finalTotal, status: "Pending" });
-        checkAchievements();
-        save();
-        updateNotifBadge();
+        checkAchievements(); save(); updateNotifBadge();
         document.getElementById('ticketDetails').innerHTML = `
             <div class="flex justify-between mb-1"><span>ID</span><span class="font-semibold text-dark">${newTicket.id}</span></div>
             <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${newTicket.spotName}</span></div>
@@ -1628,25 +1587,19 @@ function closeSuccess(toHome) {
 // REVIEW
 // ==========================================
 function openReviewFor(index) {
-    reviewIndex = index;
-    tempRating = 5;
-    updateStars();
+    reviewIndex = index; tempRating = 5; updateStars();
     document.getElementById('reviewText').value = '';
     document.getElementById('reviewModal').classList.remove('hidden');
     document.getElementById('reviewModal').classList.add('flex');
 }
-
 function closeReview() {
     document.getElementById('reviewModal').classList.add('hidden');
     document.getElementById('reviewModal').classList.remove('flex');
 }
-
 function setRating(n) { tempRating = n; updateStars(); }
-
 function updateStars() {
     document.querySelectorAll('#starRating button').forEach((btn, i) => btn.style.color = i < tempRating ? '#f59e0b' : '#d1d5db');
 }
-
 function submitReview() {
     if (!currentUser) { closeReview(); return openAuth(); }
     if (reviewIndex >= 0) {
@@ -1655,9 +1608,7 @@ function submitReview() {
         if (s) { s.rating = parseFloat(((s.rating * s.reviews + tempRating) / (s.reviews + 1)).toFixed(1)); s.reviews += 1; }
         if (currentUser) currentUser.points += 50;
     }
-    checkAchievements();
-    save();
-    closeReview();
+    checkAchievements(); save(); closeReview();
     showToast('Review ' + tempRating + '★ terkirim! +50 poin');
     renderTickets(document.getElementById('app-content'));
 }
@@ -1691,13 +1642,11 @@ function openNotifications() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function markAllRead() {
     notifications.forEach(n => n.read = true);
     save(); updateNotifBadge(); openNotifications();
     showToast('Semua dibaca', 'info');
 }
-
 function updateNotifBadge() {
     const unread = notifications.filter(n => !n.read).length;
     const b = document.getElementById('notifBadge');
@@ -1705,7 +1654,6 @@ function updateNotifBadge() {
     if (unread > 0) { b.textContent = unread; b.style.display = 'flex'; }
     else b.style.display = 'none';
 }
-
 function closeNotif() {
     const m = document.getElementById('notifModal');
     m.classList.remove('show');
@@ -1722,34 +1670,28 @@ function openEditProfile() {
     document.getElementById('editProfileModal').classList.remove('hidden');
     document.getElementById('editProfileModal').classList.add('flex');
 }
-
 function closeEditProfile() {
     document.getElementById('editProfileModal').classList.add('hidden');
     document.getElementById('editProfileModal').classList.remove('flex');
 }
-
 function saveProfile() {
     currentUser.name = document.getElementById('editName').value;
     currentUser.email = document.getElementById('editEmail').value;
     currentUser.bio = document.getElementById('editBio').value;
-    save();
-    closeEditProfile();
+    save(); closeEditProfile();
     showToast('Profil diperbarui');
     renderProfile(document.getElementById('app-content'));
 }
-
 function openPassword() {
     document.getElementById('oldPass').value = '';
     document.getElementById('newPass').value = '';
     document.getElementById('passwordModal').classList.remove('hidden');
     document.getElementById('passwordModal').classList.add('flex');
 }
-
 function closePassword() {
     document.getElementById('passwordModal').classList.add('hidden');
     document.getElementById('passwordModal').classList.remove('flex');
 }
-
 function savePassword() {
     const o = document.getElementById('oldPass').value, n = document.getElementById('newPass').value;
     if (!o || !n) return showToast('Semua field harus diisi', 'error');
@@ -1757,7 +1699,6 @@ function savePassword() {
     closePassword();
     showToast('Password diubah');
 }
-
 function showHistory() {
     const total = userTickets.length;
     const spent = userTickets.filter(t => t.status !== 'Dibatalkan').reduce((s, t) => s + t.total, 0);
@@ -1804,7 +1745,6 @@ function openLoyalty() {
     document.getElementById('loyaltyModal').classList.remove('hidden');
     document.getElementById('loyaltyModal').classList.add('flex');
 }
-
 function closeLoyalty() {
     document.getElementById('loyaltyModal').classList.add('hidden');
     document.getElementById('loyaltyModal').classList.remove('flex');
@@ -1839,7 +1779,7 @@ function showMerch() {
     html += '<div class="grid grid-cols-2 gap-3">';
     MERCHANDISE.forEach(m => {
         html += '<div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">';
-        html += '<img src="' + m.image + '" class="w-full h-32 object-cover" onerror="this.src=\'https://via.placeholder.com/200\'">';
+        html += imgTag(m.image, m.imageFallback, m.name, "w-full h-32 object-cover");
         html += '<div class="p-3"><h4 class="text-xs font-bold mb-1">' + m.name + '</h4>';
         html += '<p class="text-sm font-bold text-primary mb-2">Rp ' + m.price.toLocaleString('id-ID') + '</p>';
         html += '<p class="text-[10px] text-gray-400 mb-2">Stok: ' + m.stock + '</p>';
@@ -1871,7 +1811,6 @@ function openOwnerDashboard() {
     const netRevenue = revenue - platformFee;
     const confirmed = ownerBookings.filter(b => b.status === 'Confirmed').length;
     const pending = ownerBookings.filter(b => b.status === 'Pending').length;
-
     let bookingsHtml = '';
     ownerBookings.forEach((b, i) => {
         const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
@@ -1881,7 +1820,6 @@ function openOwnerDashboard() {
         bookingsHtml += '<p class="text-[10px] text-gray-500">' + b.date + ' • ' + b.qty + ' orang</p>';
         bookingsHtml += '<div class="flex justify-between items-center mt-2"><p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>' + btn + '</div></div>';
     });
-
     document.getElementById('ownerSpotContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
         <div class="flex justify-between items-center mb-4">
@@ -1931,8 +1869,7 @@ function closeOwner() {
 
 function confirmBooking(i) {
     ownerBookings[i].status = 'Confirmed';
-    save();
-    showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
+    save(); showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
     closeOwner();
     setTimeout(() => openOwnerDashboard(), 400);
 }
@@ -1986,8 +1923,7 @@ function closeAbout() {
 function inviteFriend() {
     if (!currentUser) return openAuth();
     currentUser.points = (currentUser.points || 0) + 200;
-    checkAchievements();
-    save();
+    checkAchievements(); save();
     const text = 'Ayo mancing bareng di MancingYuk! 🎣\nhttps://mancingyuk.app/invite/' + (currentUser.name || 'user').replace(/\s/g, '').toLowerCase();
     if (navigator.share) navigator.share({ title: 'MancingYuk!', text }).catch(() => fallbackCopy(text));
     else fallbackCopy(text);
@@ -2004,7 +1940,7 @@ function fallbackCopy(text) {
 // INIT
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('MancingYuk! v2.1 loaded');
+    console.log('MancingYuk! v2.1 loaded dengan local assets + fallback');
     try {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
