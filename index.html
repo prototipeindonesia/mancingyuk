@@ -145,26 +145,39 @@
                     <input type="checkbox" id="usePoints" onchange="updateCheckoutTotal()" class="w-4 h-4 accent-yellow-500">
                 </label>
             </div>
+            <!-- METODE PEMBAYARAN - UPDATED -->
             <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
                 <h3 class="font-bold text-sm mb-3">Metode Pembayaran</h3>
                 <div class="space-y-3">
                     <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer">
                         <div class="flex items-center space-x-3">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png" class="w-10 h-6 object-contain" alt="GoPay">
+                            <img src="assets/payments/logo-gopay.png" 
+                                 data-fallback="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png"
+                                 onerror="handleImgError(this)" 
+                                 class="w-10 h-6 object-contain" 
+                                 alt="GoPay">
                             <span class="text-sm font-medium">GoPay</span>
                         </div>
                         <input type="radio" name="payment" value="gopay" checked class="w-4 h-4 accent-primary">
                     </label>
                     <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer">
                         <div class="flex items-center space-x-3">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OVO_logo.svg/2560px-OVO_logo.svg.png" class="w-10 h-6 object-contain" alt="OVO">
+                            <img src="assets/payments/logo-ovo.png" 
+                                 data-fallback="https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OVO_logo.svg/2560px-OVO_logo.svg.png"
+                                 onerror="handleImgError(this)" 
+                                 class="w-10 h-6 object-contain" 
+                                 alt="OVO">
                             <span class="text-sm font-medium">OVO</span>
                         </div>
                         <input type="radio" name="payment" value="ovo" class="w-4 h-4 accent-primary">
                     </label>
                     <label class="flex items-center justify-between p-3 border border-gray-200 rounded-xl cursor-pointer">
                         <div class="flex items-center space-x-3">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/2560px-Bank_Central_Asia.svg.png" class="w-10 h-6 object-contain" alt="BCA">
+                            <img src="assets/payments/logo-bca.png" 
+                                 data-fallback="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/2560px-Bank_Central_Asia.svg.png"
+                                 onerror="handleImgError(this)" 
+                                 class="w-10 h-6 object-contain" 
+                                 alt="BCA">
                             <span class="text-sm font-medium">Transfer Bank</span>
                         </div>
                         <input type="radio" name="payment" value="bank" class="w-4 h-4 accent-primary">
@@ -375,7 +388,7 @@
     <div id="chatModal" class="absolute inset-0 bg-gray-50 hidden z-[97] flex-col">
         <div class="bg-white px-5 py-4 flex items-center shadow-sm shrink-0">
             <button onclick="closeChat()" class="mr-3 text-gray-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-            <img id="chatAvatar" src="https://i.pravatar.cc/100?u=owner" class="w-9 h-9 rounded-full object-cover mr-3">
+            <img id="chatAvatar" src="assets/avatars/avatar-owner.jpg" data-fallback="https://i.pravatar.cc/100?u=owner" onerror="handleImgError(this)" class="w-9 h-9 rounded-full object-cover mr-3">
             <div>
                 <h2 id="chatTitle" class="text-sm font-bold text-dark">Pemilik</h2>
                 <p class="text-[10px] text-green-500">● Online</p>
