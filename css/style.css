@@ -146,15 +146,6 @@ body {
 
 
 /* ==========================================
-   ROLE BADGE (header)
-   ========================================== */
-#roleBadge {
-    transition: all 0.2s ease-out;
-    white-space: nowrap;
-}
-
-
-/* ==========================================
    ADMIN NAV (dark bottom navigation)
    ========================================== */
 #adminNav {
