@@ -1,5 +1,5 @@
 // ==========================================
-// MancingYuk! v3.0 - Admin + Peta + Multi-Role + Widget Partner
+// MancingYuk! v3.1 - With Partner Images Support
 // ==========================================
 
 // Reset corrupt storage
@@ -70,6 +70,29 @@ const IMG = {
         gopay: { local: "assets/payments/logo-gopay.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/2560px-Gopay_logo.svg.png" },
         ovo: { local: "assets/payments/logo-ovo.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/OVO_logo.svg/2560px-OVO_logo.svg.png" },
         bca: { local: "assets/payments/logo-bca.png", fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/2560px-Bank_Central_Asia.svg.png" }
+    },
+    // ============ TAMBAHAN: TOKO PARTNER ============
+    partners: {
+        // Logo Toko
+        "logo-1": { local: "assets/partners/toko-jaya-logo.jpg", fallback: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80" },
+        "logo-2": { local: "assets/partners/fishing-gear-logo.jpg", fallback: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80" },
+        "logo-3": { local: "assets/partners/umpan-segar-logo.jpg", fallback: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80" },
+        "logo-4": { local: "assets/partners/fishing-apparel-logo.jpg", fallback: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=200&q=80" },
+        // Produk Toko Pancing Jaya
+        101: { local: "assets/partners/joran-carbon.jpg", fallback: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80" },
+        102: { local: "assets/partners/reel-spinning.jpg", fallback: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80" },
+        103: { local: "assets/partners/senar-pe.jpg", fallback: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80" },
+        // Produk Fishing Gear Pro
+        201: { local: "assets/partners/joran-shimano.jpg", fallback: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80" },
+        202: { local: "assets/partners/reel-daiwa.jpg", fallback: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80" },
+        // Produk Umpan Segar Store
+        301: { local: "assets/partners/pelet-premium.jpg", fallback: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80" },
+        302: { local: "assets/partners/cacing-segar.jpg", fallback: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80" },
+        303: { local: "assets/partners/essence-lele.jpg", fallback: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80" },
+        // Produk Fishing Apparel
+        401: { local: "assets/partners/kaos-uv.jpg", fallback: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80" },
+        402: { local: "assets/partners/topi-bucket.jpg", fallback: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80" },
+        403: { local: "assets/partners/rompi-waterproof.jpg", fallback: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80" }
     }
 };
 
@@ -99,28 +122,72 @@ const DEFAULT_SPOTS = [
 ];
 
 // ==========================================
-// TOKO PARTNER dengan PRODUK
+// TOKO PARTNER dengan PRODUK (UPDATED)
 // ==========================================
 const PARTNERS = [
-    { id: 1, name: "Toko Pancing Jaya", category: "Alat Pancing", discount: "Diskon 15%", logo: "🎣", desc: "Alat pancing lengkap", phone: "0812-1111-1111", products: [
-        { id: 101, name: "Joran Carbon 2.7m", price: 350000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 15 },
-        { id: 102, name: "Reel Spinning 3000", price: 280000, image: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 20 },
-        { id: 103, name: "Senar PE 0.8mm", price: 85000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.6, stock: 50 }
-    ]},
-    { id: 2, name: "Fishing Gear Pro", category: "Alat Premium", discount: "Cashback 10%", logo: "🪝", desc: "Brand premium", phone: "0812-2222-2222", products: [
-        { id: 201, name: "Joran Premium Shimano", price: 1250000, image: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80", rating: 4.9, stock: 5 },
-        { id: 202, name: "Reel Daiwa 4000X", price: 850000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 8 }
-    ]},
-    { id: 3, name: "Umpan Segar Store", category: "Umpan", discount: "Gratis Ongkir", logo: "🪱", desc: "Umpan segar harian", phone: "0812-3333-3333", products: [
-        { id: 301, name: "Umpan Pelet Premium 1kg", price: 45000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 100 },
-        { id: 302, name: "Umpan Cacing Segar", price: 25000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.5, stock: 50 },
-        { id: 303, name: "Essence Lele 100ml", price: 35000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 75 }
-    ]},
-    { id: 4, name: "Fishing Apparel", category: "Pakaian", discount: "Diskon 20%", logo: "👕", desc: "Pakaian pemancing", phone: "0812-4444-4444", products: [
-        { id: 401, name: "Kaos Anti-UV Fishing", price: 175000, image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80", rating: 4.6, stock: 30 },
-        { id: 402, name: "Topi Bucket Fishing", price: 95000, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 25 },
-        { id: 403, name: "Rompi Pancing Waterproof", price: 325000, image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80", rating: 4.9, stock: 12 }
-    ]}
+    {
+        id: 1,
+        name: "Toko Pancing Jaya",
+        category: "Alat Pancing",
+        discount: "Diskon 15%",
+        logo: "🎣",
+        desc: "Alat pancing lengkap",
+        phone: "0812-1111-1111",
+        image: getImgLocal('partners', 'logo-1'),
+        imageFallback: getImgFallback('partners', 'logo-1'),
+        products: [
+            { id: 101, name: "Joran Carbon 2.7m", price: 350000, image: getImgLocal('partners', 101), imageFallback: getImgFallback('partners', 101), rating: 4.8, stock: 15 },
+            { id: 102, name: "Reel Spinning 3000", price: 280000, image: getImgLocal('partners', 102), imageFallback: getImgFallback('partners', 102), rating: 4.7, stock: 20 },
+            { id: 103, name: "Senar PE 0.8mm", price: 85000, image: getImgLocal('partners', 103), imageFallback: getImgFallback('partners', 103), rating: 4.6, stock: 50 }
+        ]
+    },
+    {
+        id: 2,
+        name: "Fishing Gear Pro",
+        category: "Alat Premium",
+        discount: "Cashback 10%",
+        logo: "🪝",
+        desc: "Brand premium",
+        phone: "0812-2222-2222",
+        image: getImgLocal('partners', 'logo-2'),
+        imageFallback: getImgFallback('partners', 'logo-2'),
+        products: [
+            { id: 201, name: "Joran Premium Shimano", price: 1250000, image: getImgLocal('partners', 201), imageFallback: getImgFallback('partners', 201), rating: 4.9, stock: 5 },
+            { id: 202, name: "Reel Daiwa 4000X", price: 850000, image: getImgLocal('partners', 202), imageFallback: getImgFallback('partners', 202), rating: 4.8, stock: 8 }
+        ]
+    },
+    {
+        id: 3,
+        name: "Umpan Segar Store",
+        category: "Umpan",
+        discount: "Gratis Ongkir",
+        logo: "🪱",
+        desc: "Umpan segar harian",
+        phone: "0812-3333-3333",
+        image: getImgLocal('partners', 'logo-3'),
+        imageFallback: getImgFallback('partners', 'logo-3'),
+        products: [
+            { id: 301, name: "Umpan Pelet Premium 1kg", price: 45000, image: getImgLocal('partners', 301), imageFallback: getImgFallback('partners', 301), rating: 4.7, stock: 100 },
+            { id: 302, name: "Umpan Cacing Segar", price: 25000, image: getImgLocal('partners', 302), imageFallback: getImgFallback('partners', 302), rating: 4.5, stock: 50 },
+            { id: 303, name: "Essence Lele 100ml", price: 35000, image: getImgLocal('partners', 303), imageFallback: getImgFallback('partners', 303), rating: 4.8, stock: 75 }
+        ]
+    },
+    {
+        id: 4,
+        name: "Fishing Apparel",
+        category: "Pakaian",
+        discount: "Diskon 20%",
+        logo: "👕",
+        desc: "Pakaian pemancing",
+        phone: "0812-4444-4444",
+        image: getImgLocal('partners', 'logo-4'),
+        imageFallback: getImgFallback('partners', 'logo-4'),
+        products: [
+            { id: 401, name: "Kaos Anti-UV Fishing", price: 175000, image: getImgLocal('partners', 401), imageFallback: getImgFallback('partners', 401), rating: 4.6, stock: 30 },
+            { id: 402, name: "Topi Bucket Fishing", price: 95000, image: getImgLocal('partners', 402), imageFallback: getImgFallback('partners', 402), rating: 4.7, stock: 25 },
+            { id: 403, name: "Rompi Pancing Waterproof", price: 325000, image: getImgLocal('partners', 403), imageFallback: getImgFallback('partners', 403), rating: 4.9, stock: 12 }
+        ]
+    }
 ];
 
 // ==========================================
@@ -536,7 +603,7 @@ function switchTab(tabName) {
 }
 
 // ==========================================
-// HOME (dengan Widget Toko Partner)
+// HOME (dengan Widget Toko Partner - UPDATED)
 // ==========================================
 function renderHome(container) {
     try {
@@ -554,14 +621,14 @@ function renderHome(container) {
             premiumHtml += '<p class="text-sm font-bold text-primary">Rp ' + s.price.toLocaleString('id-ID') + '</p></div></div>';
         });
 
-        // Widget Toko Partner dengan produk
+        // Widget Toko Partner dengan produk (PAKAI imgTag untuk fallback otomatis)
         let partnerProductsHtml = '';
         PARTNERS.slice(0, 3).forEach(partner => {
             partner.products.slice(0, 2).forEach(prod => {
                 partnerProductsHtml += `
                     <div onclick="showPartnerDetail(${partner.id})" class="min-w-[170px] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer">
                         <div class="relative h-24">
-                            <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/200'">
+                            ${imgTag(prod.image, prod.imageFallback, prod.name, "w-full h-full object-cover")}
                             <div class="absolute top-1.5 left-1.5 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">${partner.discount}</div>
                         </div>
                         <div class="p-2.5">
@@ -755,7 +822,7 @@ function getFilteredSpots() {
 }
 
 // ==========================================
-// SPOT CARDS (dengan tombol peta)
+// SPOT CARDS
 // ==========================================
 function renderSpots(data) {
     const container = document.getElementById('spotContainer');
@@ -918,7 +985,7 @@ function closeMap() {
 }
 
 // ==========================================
-// PARTNER DETAIL
+// PARTNER DETAIL (UPDATED - pakai imgTag)
 // ==========================================
 function showAllPartners() {
     const modal = document.getElementById('partnerModal');
@@ -928,14 +995,15 @@ function showAllPartners() {
     html += '<div class="space-y-4">';
     PARTNERS.forEach(p => {
         html += '<div onclick="showPartnerDetail(' + p.id + ')" class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm cursor-pointer">';
-        html += '<div class="flex items-center mb-3"><div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mr-3">' + p.logo + '</div>';
+        html += '<div class="flex items-center mb-3">';
+        html += imgTag(p.image, p.imageFallback, p.name, "w-12 h-12 rounded-xl mr-3 object-cover");
         html += '<div class="flex-1"><h4 class="font-bold text-sm">' + p.name + '</h4>';
         html += '<p class="text-[10px] text-gray-500">' + p.desc + ' • ' + p.products.length + ' produk</p>';
         html += '<span class="inline-block mt-1 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded font-bold">' + p.discount + '</span></div></div>';
         html += '<div class="flex gap-2 overflow-x-auto hide-scrollbar">';
         p.products.slice(0, 3).forEach(prod => {
             html += '<div class="min-w-[90px] bg-gray-50 rounded-xl p-2 text-center">';
-            html += '<img src="' + prod.image + '" class="w-full h-16 object-cover rounded-lg mb-1" onerror="this.src=\'https://via.placeholder.com/100\'">';
+            html += imgTag(prod.image, prod.imageFallback, prod.name, "w-full h-16 object-cover rounded-lg mb-1");
             html += '<p class="text-[9px] font-bold truncate">' + prod.name + '</p>';
             html += '<p class="text-[10px] text-primary font-bold">Rp ' + prod.price.toLocaleString('id-ID') + '</p>';
             html += '</div>';
@@ -956,7 +1024,7 @@ function showPartnerDetail(partnerId) {
     html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold flex-1">' + p.name + '</h3>';
     html += '<button onclick="closePartner()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>';
     html += '<div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4 flex items-center">';
-    html += '<div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center text-3xl mr-3">' + p.logo + '</div>';
+    html += imgTag(p.image, p.imageFallback, p.name, "w-14 h-14 rounded-xl mr-3 object-cover");
     html += '<div class="flex-1"><p class="text-xs text-gray-500">' + p.category + '</p><p class="text-sm font-bold">' + p.desc + '</p>';
     html += '<p class="text-[10px] text-gray-500 mt-1">📞 ' + p.phone + '</p></div></div>';
     html += '<div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-4"><p class="text-xs font-bold text-green-700">🎉 Promo: ' + p.discount + '</p></div>';
@@ -964,7 +1032,7 @@ function showPartnerDetail(partnerId) {
     html += '<div class="space-y-3">';
     p.products.forEach(prod => {
         html += '<div class="bg-white border border-gray-100 rounded-2xl p-3 flex items-center">';
-        html += '<img src="' + prod.image + '" class="w-16 h-16 object-cover rounded-xl mr-3" onerror="this.src=\'https://via.placeholder.com/100\'">';
+        html += imgTag(prod.image, prod.imageFallback, prod.name, "w-16 h-16 object-cover rounded-xl mr-3");
         html += '<div class="flex-1"><h5 class="text-xs font-bold">' + prod.name + '</h5>';
         html += '<p class="text-[10px] text-gray-500">Stok: ' + prod.stock + ' • ★ ' + prod.rating + '</p>';
         html += '<p class="text-sm font-bold text-primary mt-1">Rp ' + prod.price.toLocaleString('id-ID') + '</p></div>';
@@ -1304,7 +1372,7 @@ function renderProfile(container) {
                 </div>
                 <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-3.5 rounded-xl font-bold border border-red-100 mb-6">Keluar Akun</button>
                 <div class="text-center pb-4">
-                    <p class="text-xs text-gray-400">MancingYuk! v3.0.0</p>
+                    <p class="text-xs text-gray-400">MancingYuk! v3.1.0</p>
                     <p class="text-[10px] text-gray-300 mt-1">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
                 </div>
             </div>
@@ -1316,8 +1384,7 @@ function renderProfile(container) {
 }
 
 // ==========================================
-// FISH GUIDE, TIPS, RECIPES, CATCH LOG, ACHIEVEMENTS, LEADERBOARD
-// (Sama seperti sebelumnya, tidak berubah)
+// FISH GUIDE
 // ==========================================
 function openFishGuide() {
     const modal = document.getElementById('notifModal');
@@ -2000,7 +2067,7 @@ function buyMerch(id) {
 }
 
 // ==========================================
-// OWNER DASHBOARD (dengan tombol Tambah Spot)
+// OWNER DASHBOARD
 // ==========================================
 function openOwnerDashboard() {
     const mySpots = spots.filter(s => s.ownerId === "owner1");
@@ -2487,7 +2554,7 @@ function fallbackCopy(text) {
 // INIT
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('MancingYuk! v3.0 loaded dengan Admin, Peta, Toko Partner, Multi-Role');
+    console.log('MancingYuk! v3.1 loaded - Toko Partner dengan gambar lokal + fallback');
     try {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
