@@ -1,64 +1,481 @@
+/* ==========================================
+   HIDE SCROLLBAR (untuk horizontal scroll)
+   ========================================== */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-#detailModal.show, #notifModal.show, #ticketDetailModal.show,
-#eventModal.show, #ownerSpotModal.show, #catchLogModal.show { display: block; }
+
+/* ==========================================
+   BOTTOM SHEET MODALS (transform animation)
+   ========================================== */
+#detailModal.show, 
+#notifModal.show, 
+#ticketDetailModal.show,
+#eventModal.show, 
+#ownerSpotModal.show, 
+#catchLogModal.show,
+#partnerModal.show { 
+    display: block; 
+}
+
 #detailModal.show #detailContent,
 #notifModal.show #notifContent,
 #ticketDetailModal.show #ticketDetailContent,
 #eventModal.show #eventContent,
 #ownerSpotModal.show #ownerSpotContent,
-#catchLogModal.show #catchLogContent { transform: translateY(0); }
+#catchLogModal.show #catchLogContent,
+#partnerModal.show #partnerContent { 
+    transform: translateY(0); 
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+@keyframes fadeIn { 
+    from { opacity: 0; transform: scale(0.95); } 
+    to { opacity: 1; transform: scale(1); } 
+}
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-@keyframes slideIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn { 
+    from { opacity: 0; transform: translateY(-20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
 
-@keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+@keyframes heartPop { 
+    0% { transform: scale(1); } 
+    50% { transform: scale(1.4); } 
+    100% { transform: scale(1); } 
+}
 .heart-pop { animation: heartPop 0.3s ease-out; }
 
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes float { 
+    0%, 100% { transform: translateY(0); } 
+    50% { transform: translateY(-8px); } 
+}
 .float-anim { animation: float 3s ease-in-out infinite; }
 
-@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 50% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } }
+@keyframes pulse-glow { 
+    0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 
+    50% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } 
+}
 .pulse-glow { animation: pulse-glow 2s infinite; }
 
-@keyframes chatIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes chatIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 .chat-in { animation: chatIn 0.3s ease-out; }
 
-body { overflow: hidden; transition: background 0.3s; }
 
-/* DARK MODE */
+/* ==========================================
+   BODY BASE
+   ========================================== */
+body { 
+    overflow: hidden; 
+    transition: background 0.3s; 
+}
+
+/* Phone Frame default transition */
+#phoneFrame {
+    transition: background 0.3s;
+}
+
+
+/* ==========================================
+   LEAFLET MAP FIX
+   ========================================== */
+#mapContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    z-index: 1;
+}
+
+.leaflet-container {
+    font-family: 'Poppins', sans-serif !important;
+    z-index: 1;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-popup-content {
+    margin: 12px 16px !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+}
+
+.leaflet-popup-tip {
+    box-shadow: 0 3px 14px rgba(0,0,0,0.1) !important;
+}
+
+/* Marker custom color */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+
+/* ==========================================
+   TICKETS PAGE (Full Page)
+   ========================================== */
+#ticketsPage {
+    transition: opacity 0.2s ease-out;
+}
+
+#ticketsPage:not(.hidden) {
+    opacity: 1;
+}
+
+
+/* ==========================================
+   ADD SPOT MODAL (Bottom Sheet)
+   ========================================== */
+#addSpotModal.hidden {
+    display: none;
+}
+
+#addSpotContent {
+    transition: transform 0.3s ease-out;
+}
+
+
+/* ==========================================
+   ROLE BADGE (header)
+   ========================================== */
+#roleBadge {
+    transition: all 0.2s ease-out;
+    white-space: nowrap;
+}
+
+
+/* ==========================================
+   ADMIN NAV (dark bottom navigation)
+   ========================================== */
+#adminNav {
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#adminNav button {
+    transition: all 0.2s;
+}
+
+#adminNav button:active {
+    transform: scale(0.95);
+}
+
+
+/* ==========================================
+   PARTNER PRODUCT CARDS (Home Widget)
+   ========================================== */
+.partner-product-card {
+    transition: transform 0.2s ease-out, box-shadow 0.2s;
+}
+
+.partner-product-card:active {
+    transform: scale(0.97);
+}
+
+
+/* ==========================================
+   DARK MODE
+   ========================================== */
 body.dark-mode { background: #0f172a; }
+
 body.dark-mode #phoneFrame { background: #1e293b !important; }
+
 body.dark-mode header,
 body.dark-mode nav,
-body.dark-mode .bg-white { background: #1e293b !important; }
+body.dark-mode .bg-white { 
+    background: #1e293b !important; 
+}
+
 body.dark-mode .bg-gray-50 { background: #0f172a !important; }
+
 body.dark-mode .bg-gray-100 { background: #334155 !important; }
+
+body.dark-mode .bg-gray-200 { background: #475569 !important; }
+
 body.dark-mode .text-dark { color: #f1f5f9 !important; }
+
 body.dark-mode .text-gray-500 { color: #94a3b8 !important; }
+
 body.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+
 body.dark-mode .text-gray-400 { color: #64748b !important; }
+
+body.dark-mode .text-gray-700 { color: #e2e8f0 !important; }
+
 body.dark-mode .border-gray-100,
-body.dark-mode .border-gray-200 { border-color: #334155 !important; }
+body.dark-mode .border-gray-200 { 
+    border-color: #334155 !important; 
+}
+
+body.dark-mode .divide-gray-100 > * + * {
+    border-color: #334155 !important;
+}
+
 body.dark-mode main { background: #0f172a !important; }
+
 body.dark-mode .bg-blue-50 { background: #1e3a5f !important; }
+
+body.dark-mode .bg-green-50 { background: #14532d !important; }
+
+body.dark-mode .bg-yellow-50 { background: #422006 !important; }
+
+body.dark-mode .bg-red-50 { background: #450a0a !important; }
+
+body.dark-mode .bg-purple-50 { background: #2e1065 !important; }
+
+/* Dark mode untuk bottom sheet modals */
 body.dark-mode #detailContent,
 body.dark-mode #notifContent,
 body.dark-mode #ticketDetailContent,
 body.dark-mode #eventContent,
 body.dark-mode #ownerSpotContent,
-body.dark-mode #catchLogContent { background: #1e293b !important; }
+body.dark-mode #catchLogContent,
+body.dark-mode #partnerContent,
+body.dark-mode #addSpotContent { 
+    background: #1e293b !important; 
+}
+
+/* Dark mode untuk chat */
 body.dark-mode #chatModal { background: #0f172a !important; }
 
-#toastContainer { position: absolute; top: 0; left: 0; right: 0; z-index: 200; pointer-events: none; padding: 0 16px; }
-.toast { pointer-events: auto; margin-top: 60px; background: #1e293b; color: white; padding: 12px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; margin-bottom: 8px; }
+body.dark-mode #chatMessages .bg-white { 
+    background: #334155 !important; 
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode #chatInput {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode #chatInput::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Dark mode untuk Halaman Tiket */
+body.dark-mode #ticketsPage { background: #0f172a !important; }
+
+body.dark-mode #ticketsPageContent { background: #0f172a !important; }
+
+/* Dark mode untuk Admin Nav */
+body.dark-mode #adminNav { 
+    background: #0a0f1a !important;
+    border-top: 1px solid #1e293b;
+}
+
+/* Dark mode untuk peta */
+body.dark-mode #mapModal { background: #0f172a !important; }
+
+body.dark-mode #mapContainer {
+    filter: brightness(0.85) contrast(1.1);
+}
+
+/* Dark mode untuk input fields */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Dark mode untuk tombol secondary/gray */
+body.dark-mode .bg-gray-200.text-gray-700 {
+    background: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Dark mode untuk toast */
+body.dark-mode .toast {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+
+/* ==========================================
+   TOAST CONTAINER
+   ========================================== */
+#toastContainer { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    z-index: 200; 
+    pointer-events: none; 
+    padding: 0 16px; 
+}
+
+.toast { 
+    pointer-events: auto; 
+    margin-top: 60px; 
+    background: #1e293b; 
+    color: white; 
+    padding: 12px 16px; 
+    border-radius: 12px; 
+    font-size: 13px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
+    animation: slideIn 0.3s ease-out; 
+    margin-bottom: 8px; 
+}
+
 .toast.success { background: #22c55e; }
+
 .toast.error { background: #ef4444; }
+
 .toast.info { background: #0ea5e9; }
 
-#starRating button { transition: transform 0.15s; }
+
+/* ==========================================
+   STAR RATING (Review Modal)
+   ========================================== */
+#starRating button { 
+    transition: transform 0.15s; 
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
 #starRating button:active { transform: scale(1.2); }
+
+#starRating button:hover { transform: scale(1.1); }
+
+
+/* ==========================================
+   BOTTOM NAV — Perbaikan agar tidak terpotong
+   ========================================== */
+#bottomNav, #adminNav {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem)) !important;
+}
+
+
+/* ==========================================
+   SCROLLBAR HALUS (dalam modal)
+   ========================================== */
+#detailContent::-webkit-scrollbar,
+#notifContent::-webkit-scrollbar,
+#ownerSpotContent::-webkit-scrollbar,
+#catchLogContent::-webkit-scrollbar,
+#partnerContent::-webkit-scrollbar,
+#addSpotContent::-webkit-scrollbar,
+#ticketsPageContent::-webkit-scrollbar {
+    width: 4px;
+}
+
+#detailContent::-webkit-scrollbar-thumb,
+#notifContent::-webkit-scrollbar-thumb,
+#ownerSpotContent::-webkit-scrollbar-thumb,
+#catchLogContent::-webkit-scrollbar-thumb,
+#partnerContent::-webkit-scrollbar-thumb,
+#addSpotContent::-webkit-scrollbar-thumb,
+#ticketsPageContent::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+body.dark-mode #detailContent::-webkit-scrollbar-thumb,
+body.dark-mode #notifContent::-webkit-scrollbar-thumb,
+body.dark-mode #ownerSpotContent::-webkit-scrollbar-thumb,
+body.dark-mode #catchLogContent::-webkit-scrollbar-thumb,
+body.dark-mode #partnerContent::-webkit-scrollbar-thumb,
+body.dark-mode #addSpotContent::-webkit-scrollbar-thumb,
+body.dark-mode #ticketsPageContent::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+
+/* ==========================================
+   RESPONSIVE — Frame HP di Desktop
+   ========================================== */
+@media (min-width: 768px) {
+    #phoneFrame {
+        overflow: hidden;
+        position: relative;
+    }
+}
+
+
+/* ==========================================
+   MOBILE — Full screen
+   ========================================== */
+@media (max-width: 767px) {
+    #phoneFrame {
+        border-radius: 0 !important;
+        border: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important;
+    }
+}
+
+
+/* ==========================================
+   UTILITY — Smooth transitions
+   ========================================== */
+button {
+    transition: transform 0.15s ease-out, background-color 0.2s, opacity 0.2s;
+}
+
+button:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+/* Hover effect untuk tombol primary */
+button.bg-primary:hover:not(:disabled) {
+    opacity: 0.92;
+}
+
+button.bg-secondary:hover:not(:disabled) {
+    opacity: 0.92;
+}
+
+
+/* ==========================================
+   LOADING / SKELETON (opsional)
+   ========================================== */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+body.dark-mode .skeleton {
+    background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+    background-size: 200% 100%;
+}
+
+
+/* ==========================================
+   PRINT (opsional — untuk E-Tiket)
+   ========================================== */
+@media print {
+    #bottomNav, #adminNav, header, .no-print {
+        display: none !important;
+    }
+    #ticketDetailModal {
+        display: block !important;
+        position: static !important;
+        background: white !important;
+    }
+}
