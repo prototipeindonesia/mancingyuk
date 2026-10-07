@@ -1,13 +1,15 @@
 // ==========================================
-// RESET CORRUPT STORAGE
+// MancingYuk! v3.0 - Admin + Peta + Multi-Role + Widget Partner
 // ==========================================
+
+// Reset corrupt storage
 try {
-    const keys = ['my_user','my_tickets','my_notifs','my_events','my_posts','owner_bookings','my_catches','my_trips','chat_history'];
+    const keys = ['my_user','my_tickets','my_notifs','my_events','my_posts','owner_bookings','my_catches','chat_history','my_spots','my_admin','registered_users','my_achievements'];
     keys.forEach(k => { const v = localStorage.getItem(k); if (v) JSON.parse(v); });
 } catch (e) { console.warn('Storage corrupt, reset'); localStorage.clear(); }
 
 // ==========================================
-// HELPER GAMBAR (Local + Fallback Online)
+// HELPER GAMBAR
 // ==========================================
 const IMG = {
     spots: {
@@ -59,6 +61,7 @@ const IMG = {
         andi: { local: "assets/avatars/avatar-andi.jpg", fallback: "https://i.pravatar.cc/150?u=andi" },
         siti: { local: "assets/avatars/avatar-siti.jpg", fallback: "https://i.pravatar.cc/150?u=siti" },
         owner: { local: "assets/avatars/avatar-owner.jpg", fallback: "https://i.pravatar.cc/150?u=owner" },
+        admin: { local: "assets/avatars/avatar-admin.jpg", fallback: "https://i.pravatar.cc/150?u=admin" },
         "leaderboard-1": { local: "assets/avatars/avatar-leaderboard-1.jpg", fallback: "https://i.pravatar.cc/150?u=juragan1" },
         "leaderboard-2": { local: "assets/avatars/avatar-leaderboard-2.jpg", fallback: "https://i.pravatar.cc/150?u=master2" },
         "leaderboard-3": { local: "assets/avatars/avatar-leaderboard-3.jpg", fallback: "https://i.pravatar.cc/150?u=haji3" }
@@ -70,12 +73,9 @@ const IMG = {
     }
 };
 
-// Helper: buat tag img dengan fallback otomatis
 function imgTag(src, fallback, alt, className) {
     return '<img src="' + src + '" data-fallback="' + fallback + '" alt="' + (alt || '') + '" class="' + (className || '') + '" onerror="handleImgError(this)">';
 }
-
-// Global error handler - pasang di body sekali
 window.handleImgError = function(img) {
     if (img.dataset.fallback && img.src !== img.dataset.fallback) {
         img.src = img.dataset.fallback;
@@ -83,33 +83,49 @@ window.handleImgError = function(img) {
         img.src = "https://via.placeholder.com/400x200?text=No+Image";
     }
 };
-
-// Getter untuk image path (local)
-function getImgLocal(category, key) {
-    const item = IMG[category] && IMG[category][key];
-    return item ? item.local : '';
-}
-function getImgFallback(category, key) {
-    const item = IMG[category] && IMG[category][key];
-    return item ? item.fallback : 'https://via.placeholder.com/400x200';
-}
-// Build img tag lengkap dari kategori
-function imgFrom(category, key, alt, cls) {
-    return imgTag(getImgLocal(category, key), getImgFallback(category, key), alt, cls);
-}
+function getImgLocal(cat, key) { const i = IMG[cat] && IMG[cat][key]; return i ? i.local : ''; }
+function getImgFallback(cat, key) { const i = IMG[cat] && IMG[cat][key]; return i ? i.fallback : 'https://via.placeholder.com/400x200'; }
 
 // ==========================================
-// DATA SPOT (Pakai Helper IMG)
+// DATA SPOT dengan KOORDINAT
 // ==========================================
 const DEFAULT_SPOTS = [
-    { id: 1, name: "Pemancingan Pak Budi", location: "Lele, Nila, Mas", city: "Jakarta Selatan", price: 50000, rating: 4.7, reviews: 120, slots: 20, image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), facilities: ["Saung","Parkir Luas","Kantin","Sewa Alat","Toilet"], description: "Pemancingan nyaman dengan suasana pedesaan.", owner: "Pak Budi", premium: true, ownerId: "owner1", distance: 2.3, open: "06:00 - 22:00" },
-    { id: 2, name: "Kolam Mancing Sejahtera", location: "Gurame, Patin", city: "Depok", price: 75000, rating: 4.5, reviews: 85, slots: 15, image: getImgLocal('spots',2), imageFallback: getImgFallback('spots',2), facilities: ["AC Room","Mushola","WiFi","Resto"], description: "Pemancingan premium dengan fasilitas lengkap.", owner: "Haji Sejahtera", premium: true, ownerId: "owner2", distance: 8.5, open: "07:00 - 21:00" },
-    { id: 3, name: "Spot Alam Liar (Waduk)", location: "Bawal, Nila", city: "Bogor", price: 30000, rating: 4.8, reviews: 200, slots: 0, image: getImgLocal('spots',3), imageFallback: getImgFallback('spots',3), facilities: ["Camping Ground","Toilet"], description: "Mancing di alam terbuka langsung di waduk.", owner: "Kelompok Tani Waduk", premium: false, ownerId: "owner3", distance: 25.0, open: "24 Jam" },
-    { id: 4, name: "Mancing Mania Center", location: "Mas, Tombro", city: "Tangerang", price: 60000, rating: 4.6, reviews: 150, slots: 25, image: getImgLocal('spots',4), imageFallback: getImgFallback('spots',4), facilities: ["Panggung","Sewa Alat","Kantin"], description: "Pemancingan malam dengan lampu sorot.", owner: "Bang Jago", premium: false, ownerId: "owner4", distance: 15.8, open: "16:00 - 04:00" },
-    { id: 5, name: "Pemancingan Ikan Hias", location: "Koi, Arwana", city: "Bandung", price: 100000, rating: 4.9, reviews: 60, slots: 10, image: getImgLocal('spots',5), imageFallback: getImgFallback('spots',5), facilities: ["Kolam Kaca","AC","Pemandu"], description: "Pengalaman mancing eksklusif untuk ikan hias.", owner: "Dedi Koi", premium: true, ownerId: "owner5", distance: 120, open: "08:00 - 20:00" },
-    { id: 6, name: "Sungai Citarum Fishing", location: "Baung, Mujair", city: "Karawang", price: 25000, rating: 4.3, reviews: 45, slots: 30, image: getImgLocal('spots',6), imageFallback: getImgFallback('spots',6), facilities: ["Area Piknik","Mushola"], description: "Mancing di tepi sungai dengan pemandangan indah.", owner: "Kang Ujang", premium: false, ownerId: "owner6", distance: 45, open: "05:00 - 18:00" }
+    { id: 1, name: "Pemancingan Pak Budi", location: "Lele, Nila, Mas", city: "Jakarta Selatan", price: 50000, rating: 4.7, reviews: 120, slots: 20, image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), facilities: ["Saung","Parkir Luas","Kantin","Sewa Alat","Toilet"], description: "Pemancingan nyaman dengan suasana pedesaan.", owner: "Pak Budi", ownerId: "owner1", premium: true, distance: 2.3, open: "06:00 - 22:00", lat: -6.2615, lng: 106.8106 },
+    { id: 2, name: "Kolam Mancing Sejahtera", location: "Gurame, Patin", city: "Depok", price: 75000, rating: 4.5, reviews: 85, slots: 15, image: getImgLocal('spots',2), imageFallback: getImgFallback('spots',2), facilities: ["AC Room","Mushola","WiFi","Resto"], description: "Pemancingan premium dengan fasilitas lengkap.", owner: "Haji Sejahtera", ownerId: "owner2", premium: true, distance: 8.5, open: "07:00 - 21:00", lat: -6.4025, lng: 106.7942 },
+    { id: 3, name: "Spot Alam Liar (Waduk)", location: "Bawal, Nila", city: "Bogor", price: 30000, rating: 4.8, reviews: 200, slots: 0, image: getImgLocal('spots',3), imageFallback: getImgFallback('spots',3), facilities: ["Camping Ground","Toilet"], description: "Mancing di alam terbuka langsung di waduk.", owner: "Kelompok Tani Waduk", ownerId: "owner3", premium: false, distance: 25.0, open: "24 Jam", lat: -6.5950, lng: 106.8166 },
+    { id: 4, name: "Mancing Mania Center", location: "Mas, Tombro", city: "Tangerang", price: 60000, rating: 4.6, reviews: 150, slots: 25, image: getImgLocal('spots',4), imageFallback: getImgFallback('spots',4), facilities: ["Panggung","Sewa Alat","Kantin"], description: "Pemancingan malam dengan lampu sorot.", owner: "Bang Jago", ownerId: "owner4", premium: false, distance: 15.8, open: "16:00 - 04:00", lat: -6.1783, lng: 106.6319 },
+    { id: 5, name: "Pemancingan Ikan Hias", location: "Koi, Arwana", city: "Bandung", price: 100000, rating: 4.9, reviews: 60, slots: 10, image: getImgLocal('spots',5), imageFallback: getImgFallback('spots',5), facilities: ["Kolam Kaca","AC","Pemandu"], description: "Pengalaman mancing eksklusif untuk ikan hias.", owner: "Dedi Koi", ownerId: "owner5", premium: true, distance: 120, open: "08:00 - 20:00", lat: -6.9175, lng: 107.6191 },
+    { id: 6, name: "Sungai Citarum Fishing", location: "Baung, Mujair", city: "Karawang", price: 25000, rating: 4.3, reviews: 45, slots: 30, image: getImgLocal('spots',6), imageFallback: getImgFallback('spots',6), facilities: ["Area Piknik","Mushola"], description: "Mancing di tepi sungai dengan pemandangan indah.", owner: "Kang Ujang", ownerId: "owner6", premium: false, distance: 45, open: "05:00 - 18:00", lat: -6.3015, lng: 107.3061 }
 ];
 
+// ==========================================
+// TOKO PARTNER dengan PRODUK
+// ==========================================
+const PARTNERS = [
+    { id: 1, name: "Toko Pancing Jaya", category: "Alat Pancing", discount: "Diskon 15%", logo: "🎣", desc: "Alat pancing lengkap", phone: "0812-1111-1111", products: [
+        { id: 101, name: "Joran Carbon 2.7m", price: 350000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 15 },
+        { id: 102, name: "Reel Spinning 3000", price: 280000, image: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 20 },
+        { id: 103, name: "Senar PE 0.8mm", price: 85000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.6, stock: 50 }
+    ]},
+    { id: 2, name: "Fishing Gear Pro", category: "Alat Premium", discount: "Cashback 10%", logo: "🪝", desc: "Brand premium", phone: "0812-2222-2222", products: [
+        { id: 201, name: "Joran Premium Shimano", price: 1250000, image: "https://images.unsplash.com/photo-1583179315721-a8e2c4e2d0c6?auto=format&fit=crop&w=400&q=80", rating: 4.9, stock: 5 },
+        { id: 202, name: "Reel Daiwa 4000X", price: 850000, image: "https://images.unsplash.com/photo-1587248720327-8eb72564be1e?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 8 }
+    ]},
+    { id: 3, name: "Umpan Segar Store", category: "Umpan", discount: "Gratis Ongkir", logo: "🪱", desc: "Umpan segar harian", phone: "0812-3333-3333", products: [
+        { id: 301, name: "Umpan Pelet Premium 1kg", price: 45000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 100 },
+        { id: 302, name: "Umpan Cacing Segar", price: 25000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.5, stock: 50 },
+        { id: 303, name: "Essence Lele 100ml", price: 35000, image: "https://images.unsplash.com/photo-1625001074074-90efc99c1be6?auto=format&fit=crop&w=400&q=80", rating: 4.8, stock: 75 }
+    ]},
+    { id: 4, name: "Fishing Apparel", category: "Pakaian", discount: "Diskon 20%", logo: "👕", desc: "Pakaian pemancing", phone: "0812-4444-4444", products: [
+        { id: 401, name: "Kaos Anti-UV Fishing", price: 175000, image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80", rating: 4.6, stock: 30 },
+        { id: 402, name: "Topi Bucket Fishing", price: 95000, image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=400&q=80", rating: 4.7, stock: 25 },
+        { id: 403, name: "Rompi Pancing Waterproof", price: 325000, image: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=400&q=80", rating: 4.9, stock: 12 }
+    ]}
+];
+
+// ==========================================
+// DATA LAINNYA
+// ==========================================
 const EVENTS_DATA = [
     { id: 1, title: "Turnamen Mancing Lele", spotId: 1, date: "15 Nov 2024", time: "06:00 - 12:00", fee: 50000, prize: "Rp 5.000.000", participants: 45, maxParticipants: 100, status: "upcoming", image: getImgLocal('events',1), imageFallback: getImgFallback('events',1), desc: "Turnamen mancing lele dengan hadiah utama Rp 5 juta." },
     { id: 2, title: "Lomba Mancing Gurame", spotId: 2, date: "20 Nov 2024", time: "07:00 - 14:00", fee: 75000, prize: "Rp 3.000.000", participants: 28, maxParticipants: 50, status: "upcoming", image: getImgLocal('events',2), imageFallback: getImgFallback('events',2), desc: "Lomba mancing gurame jumbo." },
@@ -165,13 +181,6 @@ const LEADERBOARD = [
     { rank: 6, name: "Siti Angler", avatar: IMG.avatars.siti.local, avatarFallback: IMG.avatars.siti.fallback, points: 750, catches: 5, medal: "" }
 ];
 
-const PARTNERS = [
-    { id: 1, name: "Toko Pancing Jaya", discount: "Diskon 15%", logo: "🎣", desc: "Alat pancing lengkap" },
-    { id: 2, name: "Fishing Gear Pro", discount: "Cashback 10%", logo: "🪝", desc: "Brand premium" },
-    { id: 3, name: "Umpan Segar Store", discount: "Gratis Ongkir", logo: "🪱", desc: "Umpan segar harian" },
-    { id: 4, name: "Fishing Apparel", discount: "Diskon 20%", logo: "👕", desc: "Pakaian pemancing" }
-];
-
 const MERCHANDISE = [
     { id: 1, name: "Kaos MancingYuk!", price: 85000, image: getImgLocal('merch',1), imageFallback: getImgFallback('merch',1), stock: 50 },
     { id: 2, name: "Topi MancingYuk!", price: 65000, image: getImgLocal('merch',2), imageFallback: getImgFallback('merch',2), stock: 30 },
@@ -187,27 +196,20 @@ const WEATHER_FORECAST = {
 // ==========================================
 // STATE
 // ==========================================
-let spots = JSON.parse(JSON.stringify(DEFAULT_SPOTS));
-let eventsData = JSON.parse(JSON.stringify(EVENTS_DATA));
-let communityPosts = JSON.parse(JSON.stringify(COMMUNITY_POSTS));
-let achievements = JSON.parse(JSON.stringify(ACHIEVEMENTS));
-
 function safeLoad(key, fallback) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        return JSON.parse(raw) || fallback;
-    } catch (e) { return fallback; }
+    try { const r = localStorage.getItem(key); if (!r) return fallback; return JSON.parse(r) || fallback; }
+    catch (e) { return fallback; }
 }
 
+let spots = safeLoad('my_spots', JSON.parse(JSON.stringify(DEFAULT_SPOTS)));
+let eventsData = JSON.parse(JSON.stringify(EVENTS_DATA));
+let communityPosts = JSON.parse(JSON.stringify(COMMUNITY_POSTS));
+let achievements = safeLoad('my_achievements', JSON.parse(JSON.stringify(ACHIEVEMENTS)));
 let currentUser = safeLoad('my_user', null);
-let userTickets = safeLoad('my_tickets', [
-    { id: "TKT-001", spotName: "Pemancingan Pak Budi", spotId: 1, date: "25 Okt 2023", qty: 2, total: 100000, status: "Selesai", image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), reviewed: false }
-]);
+let userTickets = safeLoad('my_tickets', []);
 let notifications = safeLoad('my_notifs', [
     { id: 1, title: "Promo Spesial!", msg: "Diskon 10% untuk booking grup minggu ini", time: "2 jam lalu", read: false },
-    { id: 2, title: "Booking Berhasil", msg: "Tiket Pemancingan Pak Budi telah aktif", time: "1 hari lalu", read: false },
-    { id: 3, title: "Spot Baru!", msg: "Pemancingan Ikan Hias kini tersedia", time: "3 hari lalu", read: true }
+    { id: 2, title: "Spot Baru!", msg: "Pemancingan Ikan Hias kini tersedia", time: "3 hari lalu", read: false }
 ]);
 let userEvents = safeLoad('my_events', []);
 let myPosts = safeLoad('my_posts', []);
@@ -216,14 +218,15 @@ let ownerBookings = safeLoad('owner_bookings', [
     { id: "B-002", customer: "Siti", spot: "Pemancingan Pak Budi", date: "16 Nov", qty: 3, total: 150000, status: "Confirmed" },
     { id: "B-003", customer: "Budi", spot: "Pemancingan Pak Budi", date: "17 Nov", qty: 1, total: 50000, status: "Pending" }
 ]);
-let userCatches = safeLoad('my_catches', [
-    { id: 1, fish: "Lele", weight: 2.5, spot: "Pemancingan Pak Budi", date: "20 Okt 2024", note: "Umpan usus ayam" },
-    { id: 2, fish: "Gurame", weight: 1.8, spot: "Kolam Mancing Sejahtera", date: "22 Okt 2024", note: "Daun talas" }
-]);
-let userTrips = safeLoad('my_trips', []);
+let userCatches = safeLoad('my_catches', []);
 let chatHistory = safeLoad('chat_history', {});
 let isDarkMode = safeLoad('dark_mode', false);
 let onboardingDone = safeLoad('onboarding_done', false);
+let registeredUsers = safeLoad('registered_users', [
+    { name: "Rizky Pemancing", email: "rizky@email.com", type: "pemancing", joinDate: "Januari 2024" },
+    { name: "Pak Budi", email: "budi@owner.com", type: "owner", joinDate: "Januari 2024" },
+    { name: "Haji Sejahtera", email: "sejahtera@owner.com", type: "owner", joinDate: "Februari 2024" }
+]);
 
 let selectedSpot = null;
 let bookingData = {};
@@ -235,6 +238,9 @@ let currentEventTab = 'upcoming';
 let reviewIndex = -1;
 let currentChatOwner = null;
 let currentOnboardingStep = 0;
+let currentAdminTab = 'dashboard';
+let leafletMap = null;
+let mapMarkers = [];
 
 function save() {
     try {
@@ -246,10 +252,12 @@ function save() {
         localStorage.setItem('my_posts', JSON.stringify(myPosts));
         localStorage.setItem('owner_bookings', JSON.stringify(ownerBookings));
         localStorage.setItem('my_catches', JSON.stringify(userCatches));
-        localStorage.setItem('my_trips', JSON.stringify(userTrips));
         localStorage.setItem('chat_history', JSON.stringify(chatHistory));
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
         localStorage.setItem('onboarding_done', JSON.stringify(onboardingDone));
+        localStorage.setItem('my_spots', JSON.stringify(spots));
+        localStorage.setItem('my_achievements', JSON.stringify(achievements));
+        localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
     } catch (e) { console.warn('Save error', e); }
 }
 
@@ -321,7 +329,7 @@ function finishOnboarding() {
 }
 
 // ==========================================
-// AUTH
+// AUTH dengan 3 ROLE
 // ==========================================
 function toggleAuth(type) {
     const bL = document.getElementById('btn-login'), bS = document.getElementById('btn-signup');
@@ -340,22 +348,53 @@ function toggleAuth(type) {
 function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
-    const stored = safeLoad('registered_user', null);
-    if (stored && stored.email === email) currentUser = stored;
-    else {
+    const role = document.getElementById('loginRole') ? document.getElementById('loginRole').value : 'pemancing';
+    
+    if (role === 'admin') {
+        if (email !== 'admin@mancingyuk.com') {
+            showToast('Gunakan email admin@mancingyuk.com', 'error');
+            return;
+        }
         currentUser = {
-            name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Pemancing",
-            email, avatar: IMG.avatars.rizky.local, avatarFallback: IMG.avatars.rizky.fallback,
-            level: "Pemancing Aktif", points: 1250,
-            bio: "Pecinta mancing sejati 🎣",
-            joinDate: "Januari 2024", type: "pemancing"
+            name: "Admin MancingYuk",
+            email: "admin@mancingyuk.com",
+            avatar: IMG.avatars.admin.local,
+            avatarFallback: IMG.avatars.admin.fallback,
+            level: "Super Admin", points: 0,
+            bio: "Pengelola aplikasi MancingYuk!",
+            joinDate: "Januari 2024", type: "admin"
         };
+    } else if (role === 'owner') {
+        currentUser = {
+            name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Owner",
+            email: email,
+            avatar: IMG.avatars.owner.local,
+            avatarFallback: IMG.avatars.owner.fallback,
+            level: "Pemilik Pemancingan", points: 0,
+            bio: "Pemilik pemancingan",
+            joinDate: "Januari 2024", type: "owner"
+        };
+    } else {
+        const stored = safeLoad('registered_user', null);
+        if (stored && stored.email === email) currentUser = stored;
+        else {
+            currentUser = {
+                name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Pemancing",
+                email: email,
+                avatar: IMG.avatars.rizky.local,
+                avatarFallback: IMG.avatars.rizky.fallback,
+                level: "Pemancing Aktif", points: 1250,
+                bio: "Pecinta mancing sejati 🎣",
+                joinDate: "Januari 2024", type: "pemancing"
+            };
+        }
     }
     save();
     document.getElementById('authModal').classList.add('hidden');
     document.getElementById('authModal').classList.remove('flex');
     showToast('Selamat datang, ' + currentUser.name + '!');
-    switchTab('home');
+    updateRoleUI();
+    switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
 }
 
 function handleSignup(e) {
@@ -365,27 +404,78 @@ function handleSignup(e) {
     const type = document.getElementById('signupType').value;
     currentUser = {
         name, email, type,
-        avatar: IMG.avatars.default.local, avatarFallback: IMG.avatars.default.fallback,
+        avatar: type === 'owner' ? IMG.avatars.owner.local : IMG.avatars.default.local,
+        avatarFallback: type === 'owner' ? IMG.avatars.owner.fallback : IMG.avatars.default.fallback,
         level: type === 'owner' ? "Pemilik Pemancingan" : "Pemancing Baru",
         points: 100, bio: "Baru bergabung di MancingYuk!",
-        joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })
+        joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+        type: type
     };
-    localStorage.setItem('registered_user', JSON.stringify(currentUser));
+    if (!registeredUsers.find(u => u.email === email)) {
+        registeredUsers.push({ name, email, type, joinDate: currentUser.joinDate });
+    }
     save();
     document.getElementById('authModal').classList.add('hidden');
     document.getElementById('authModal').classList.remove('flex');
     showToast('Akun berhasil dibuat!');
+    updateRoleUI();
     switchTab('home');
 }
 
 function logout() {
     if (!confirm('Yakin ingin keluar?')) return;
-    currentUser = null; save(); openAuth();
+    currentUser = null; save();
+    document.getElementById('bottomNav').classList.remove('hidden');
+    document.getElementById('adminNav').classList.add('hidden');
+    document.getElementById('roleBadge').classList.add('hidden');
+    openAuth();
     showToast('Anda telah keluar', 'info');
 }
+
+function adminLogout() {
+    if (!confirm('Keluar dari mode admin?')) return;
+    currentUser = null; save();
+    document.getElementById('bottomNav').classList.remove('hidden');
+    document.getElementById('adminNav').classList.add('hidden');
+    document.getElementById('roleBadge').classList.add('hidden');
+    openAuth();
+    showToast('Anda telah keluar dari admin', 'info');
+}
+
 function openAuth() {
     const m = document.getElementById('authModal');
     m.classList.remove('hidden'); m.classList.add('flex');
+}
+
+function updateRoleUI() {
+    const badge = document.getElementById('roleBadge');
+    const bottomNav = document.getElementById('bottomNav');
+    const adminNav = document.getElementById('adminNav');
+    
+    if (!currentUser) {
+        badge.classList.add('hidden');
+        bottomNav.classList.remove('hidden');
+        adminNav.classList.add('hidden');
+        return;
+    }
+    
+    badge.classList.remove('hidden');
+    if (currentUser.type === 'admin') {
+        badge.textContent = '👑 ADMIN';
+        badge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-red-100 text-red-700';
+        bottomNav.classList.add('hidden');
+        adminNav.classList.remove('hidden');
+    } else if (currentUser.type === 'owner') {
+        badge.textContent = '🏪 OWNER';
+        badge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700';
+        bottomNav.classList.remove('hidden');
+        adminNav.classList.add('hidden');
+    } else {
+        badge.textContent = '🎣 PEMANCING';
+        badge.className = 'text-[9px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-primary';
+        bottomNav.classList.remove('hidden');
+        adminNav.classList.add('hidden');
+    }
 }
 
 // ==========================================
@@ -400,14 +490,39 @@ function switchTab(tabName) {
             const svg = btn.querySelector('svg');
             if (svg) { svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); }
         });
+        ['dashboard','spots','users','bookings'].forEach(tab => {
+            const btn = document.getElementById('anav-' + tab);
+            if (!btn) return;
+            btn.className = "flex flex-col items-center text-gray-400";
+            const svg = btn.querySelector('svg');
+            if (svg) { svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); }
+        });
+        
+        const content = document.getElementById('app-content');
+        if (!content) return;
+        
+        if (tabName.startsWith('admin-')) {
+            const subtab = tabName.replace('admin-','');
+            const activeBtn = document.getElementById('anav-' + subtab);
+            if (activeBtn) {
+                activeBtn.className = "flex flex-col items-center text-primary";
+                const svg = activeBtn.querySelector('svg');
+                if (svg) { svg.setAttribute('fill', 'currentColor'); svg.removeAttribute('stroke'); }
+            }
+            if (tabName === 'admin-dashboard') renderAdminDashboard(content);
+            else if (tabName === 'admin-spots') renderAdminSpots(content);
+            else if (tabName === 'admin-users') renderAdminUsers(content);
+            else if (tabName === 'admin-bookings') renderAdminBookings(content);
+            content.scrollTop = 0;
+            return;
+        }
+        
         const activeBtn = document.getElementById('nav-' + tabName);
         if (activeBtn) {
             activeBtn.className = "flex flex-col items-center text-primary";
             const svg = activeBtn.querySelector('svg');
             if (svg) { svg.setAttribute('fill', 'currentColor'); svg.removeAttribute('stroke'); }
         }
-        const content = document.getElementById('app-content');
-        if (!content) return;
         if (tabName === 'home') renderHome(content);
         else if (tabName === 'explore') renderExplore(content);
         else if (tabName === 'events') renderEvents(content);
@@ -421,7 +536,7 @@ function switchTab(tabName) {
 }
 
 // ==========================================
-// HOME
+// HOME (dengan Widget Toko Partner)
 // ==========================================
 function renderHome(container) {
     try {
@@ -437,6 +552,29 @@ function renderHome(container) {
             premiumHtml += '<div class="p-3"><h3 class="text-xs font-bold text-dark truncate">' + s.name + '</h3>';
             premiumHtml += '<p class="text-[10px] text-gray-500 mb-1">' + s.city + ' • ' + s.distance + ' km</p>';
             premiumHtml += '<p class="text-sm font-bold text-primary">Rp ' + s.price.toLocaleString('id-ID') + '</p></div></div>';
+        });
+
+        // Widget Toko Partner dengan produk
+        let partnerProductsHtml = '';
+        PARTNERS.slice(0, 3).forEach(partner => {
+            partner.products.slice(0, 2).forEach(prod => {
+                partnerProductsHtml += `
+                    <div onclick="showPartnerDetail(${partner.id})" class="min-w-[170px] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer">
+                        <div class="relative h-24">
+                            <img src="${prod.image}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/200'">
+                            <div class="absolute top-1.5 left-1.5 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">${partner.discount}</div>
+                        </div>
+                        <div class="p-2.5">
+                            <p class="text-[9px] text-gray-500">${partner.name}</p>
+                            <h4 class="text-[11px] font-bold text-dark truncate">${prod.name}</h4>
+                            <div class="flex justify-between items-center mt-1">
+                                <p class="text-xs font-bold text-primary">Rp ${prod.price.toLocaleString('id-ID')}</p>
+                                <span class="text-[9px] text-yellow-500">★ ${prod.rating}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         });
 
         const steps = [
@@ -491,18 +629,27 @@ function renderHome(container) {
                     <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-xl mb-1">🎣</div>
                     <span class="text-[9px] font-medium text-dark">Spot</span>
                 </button>
-                <button onclick="switchTab('events')" class="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
-                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-xl mb-1">🏆</div>
-                    <span class="text-[9px] font-medium text-dark">Event</span>
+                <button onclick="openMap()" class="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl mb-1">🗺️</div>
+                    <span class="text-[9px] font-medium text-dark">Peta</span>
                 </button>
                 <button onclick="openFishGuide()" class="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
-                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl mb-1">🐟</div>
+                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-xl mb-1">🐟</div>
                     <span class="text-[9px] font-medium text-dark">Ikan</span>
                 </button>
                 <button onclick="openCatchLog()" class="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
                     <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-xl mb-1">📖</div>
                     <span class="text-[9px] font-medium text-dark">Catatan</span>
                 </button>
+            </div>
+
+            <!-- Widget Toko Partner -->
+            <div class="mt-6">
+                <div class="flex justify-between items-center px-5 mb-3">
+                    <h2 class="font-bold text-dark">🛒 Toko Partner</h2>
+                    <button onclick="showAllPartners()" class="text-xs text-primary font-semibold">Lihat Semua</button>
+                </div>
+                <div class="flex overflow-x-auto space-x-3 px-5 pb-2 hide-scrollbar">${partnerProductsHtml}</div>
             </div>
 
             <div class="px-5 mt-4">
@@ -590,20 +737,12 @@ function getGreeting() {
     if (h < 19) return "Selamat sore";
     return "Selamat malam";
 }
-
-function handleSearch(val) {
-    currentSearchQuery = val;
-    const c = document.getElementById('spotContainer');
-    if (c) renderSpots(getFilteredSpots());
-}
+function handleSearch(val) { currentSearchQuery = val; const c = document.getElementById('spotContainer'); if (c) renderSpots(getFilteredSpots()); }
 function clearSearch() { currentSearchQuery = ''; renderHome(document.getElementById('app-content')); }
 
 function getFilteredSpots() {
     let filtered = spots.filter(s => {
-        const mQ = !currentSearchQuery ||
-            s.name.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
-            s.location.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
-            s.city.toLowerCase().includes(currentSearchQuery.toLowerCase());
+        const mQ = !currentSearchQuery || s.name.toLowerCase().includes(currentSearchQuery.toLowerCase()) || s.location.toLowerCase().includes(currentSearchQuery.toLowerCase()) || s.city.toLowerCase().includes(currentSearchQuery.toLowerCase());
         const mC = currentCategory === 'all' || s.location.toLowerCase().includes(currentCategory.toLowerCase());
         return mQ && mC;
     });
@@ -616,7 +755,7 @@ function getFilteredSpots() {
 }
 
 // ==========================================
-// SPOT CARDS
+// SPOT CARDS (dengan tombol peta)
 // ==========================================
 function renderSpots(data) {
     const container = document.getElementById('spotContainer');
@@ -644,8 +783,10 @@ function renderSpots(data) {
         html += '<div class="flex justify-between items-center">';
         html += '<div><p class="text-[10px] text-gray-400">Harga / Orang</p>';
         html += '<p class="text-lg font-bold text-primary">Rp ' + spot.price.toLocaleString('id-ID') + '</p></div>';
-        html += '<button onclick="openDetail(' + spot.id + ')" class="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold">Detail</button>';
-        html += '</div></div></div>';
+        html += '<div class="flex gap-1.5">';
+        html += '<button onclick="openSpotMap(' + spot.id + ')" class="bg-green-100 text-green-700 p-2.5 rounded-xl text-sm font-semibold">📍</button>';
+        html += '<button onclick="openDetail(' + spot.id + ')" class="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold">Detail</button>';
+        html += '</div></div></div></div>';
     });
     container.innerHTML = html;
 }
@@ -672,7 +813,13 @@ function renderExplore(container) {
         });
         container.innerHTML = `
             <div class="px-5 pt-4 pb-3 bg-white">
-                <h2 class="text-lg font-bold mb-3">Explore Spot</h2>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-bold">Explore Spot</h2>
+                    <button onclick="openMap()" class="bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-full flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                        Peta
+                    </button>
+                </div>
                 <div class="flex items-center bg-gray-100 rounded-2xl p-1 border border-gray-200 mb-3">
                     <svg class="w-5 h-5 text-gray-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     <input type="text" placeholder="Cari..." value="${currentSearchQuery}" class="w-full px-3 py-3 bg-transparent text-sm focus:outline-none" oninput="handleSearch(this.value)">
@@ -701,6 +848,200 @@ function filterCategory(cat) {
     else renderHome(document.getElementById('app-content'));
 }
 function setSort(sort) { currentSort = sort; renderExplore(document.getElementById('app-content')); }
+
+// ==========================================
+// MAP (Leaflet)
+// ==========================================
+function openMap(spotId) {
+    spotId = spotId || null;
+    const modal = document.getElementById('mapModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('mapTitle').textContent = spotId ? 'Lokasi Spot' : 'Peta Spot Mancing';
+    
+    if (leafletMap) {
+        leafletMap.remove();
+        leafletMap = null;
+        mapMarkers = [];
+    }
+    
+    setTimeout(() => {
+        let center = [-6.2088, 106.8456];
+        let zoom = 10;
+        if (spotId) {
+            const s = spots.find(x => x.id === spotId);
+            if (s && s.lat) { center = [s.lat, s.lng]; zoom = 14; }
+        } else {
+            const validSpots = spots.filter(s => s.lat && s.lng);
+            if (validSpots.length > 0) {
+                const lats = validSpots.map(s => s.lat);
+                const lngs = validSpots.map(s => s.lng);
+                center = [(Math.min(...lats) + Math.max(...lats)) / 2, (Math.min(...lngs) + Math.max(...lngs)) / 2];
+                zoom = 9;
+            }
+        }
+        
+        leafletMap = L.map('mapContainer').setView(center, zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(leafletMap);
+        
+        const toShow = spotId ? spots.filter(s => s.id === spotId) : spots;
+        toShow.forEach(s => {
+            if (s.lat && s.lng) {
+                const marker = L.marker([s.lat, s.lng]).addTo(leafletMap);
+                marker.bindPopup(`
+                    <div style="min-width:180px;font-family:Poppins,sans-serif">
+                        <b style="color:#0ea5e9">${s.name}</b><br>
+                        <small>📍 ${s.city}</small><br>
+                        <small>💰 Rp ${s.price.toLocaleString('id-ID')}/orang</small><br>
+                        <small>⭐ ${s.rating} (${s.reviews} review)</small>
+                    </div>
+                `);
+                if (spotId) marker.openPopup();
+                mapMarkers.push(marker);
+            }
+        });
+        
+        setTimeout(() => leafletMap.invalidateSize(), 200);
+    }, 150);
+}
+
+function openSpotMap(spotId) { openMap(spotId); }
+
+function closeMap() {
+    const modal = document.getElementById('mapModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (leafletMap) { leafletMap.remove(); leafletMap = null; mapMarkers = []; }
+}
+
+// ==========================================
+// PARTNER DETAIL
+// ==========================================
+function showAllPartners() {
+    const modal = document.getElementById('partnerModal');
+    let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
+    html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">🛒 Semua Toko Partner</h3>';
+    html += '<button onclick="closePartner()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>';
+    html += '<div class="space-y-4">';
+    PARTNERS.forEach(p => {
+        html += '<div onclick="showPartnerDetail(' + p.id + ')" class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm cursor-pointer">';
+        html += '<div class="flex items-center mb-3"><div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mr-3">' + p.logo + '</div>';
+        html += '<div class="flex-1"><h4 class="font-bold text-sm">' + p.name + '</h4>';
+        html += '<p class="text-[10px] text-gray-500">' + p.desc + ' • ' + p.products.length + ' produk</p>';
+        html += '<span class="inline-block mt-1 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded font-bold">' + p.discount + '</span></div></div>';
+        html += '<div class="flex gap-2 overflow-x-auto hide-scrollbar">';
+        p.products.slice(0, 3).forEach(prod => {
+            html += '<div class="min-w-[90px] bg-gray-50 rounded-xl p-2 text-center">';
+            html += '<img src="' + prod.image + '" class="w-full h-16 object-cover rounded-lg mb-1" onerror="this.src=\'https://via.placeholder.com/100\'">';
+            html += '<p class="text-[9px] font-bold truncate">' + prod.name + '</p>';
+            html += '<p class="text-[10px] text-primary font-bold">Rp ' + prod.price.toLocaleString('id-ID') + '</p>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('partnerContent').innerHTML = html;
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function showPartnerDetail(partnerId) {
+    const p = PARTNERS.find(x => x.id === partnerId);
+    if (!p) return;
+    const modal = document.getElementById('partnerModal');
+    let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
+    html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold flex-1">' + p.name + '</h3>';
+    html += '<button onclick="closePartner()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>';
+    html += '<div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4 flex items-center">';
+    html += '<div class="w-14 h-14 bg-white rounded-xl flex items-center justify-center text-3xl mr-3">' + p.logo + '</div>';
+    html += '<div class="flex-1"><p class="text-xs text-gray-500">' + p.category + '</p><p class="text-sm font-bold">' + p.desc + '</p>';
+    html += '<p class="text-[10px] text-gray-500 mt-1">📞 ' + p.phone + '</p></div></div>';
+    html += '<div class="bg-green-50 border border-green-200 rounded-xl p-3 mb-4"><p class="text-xs font-bold text-green-700">🎉 Promo: ' + p.discount + '</p></div>';
+    html += '<h4 class="font-bold text-sm mb-3">Produk Tersedia</h4>';
+    html += '<div class="space-y-3">';
+    p.products.forEach(prod => {
+        html += '<div class="bg-white border border-gray-100 rounded-2xl p-3 flex items-center">';
+        html += '<img src="' + prod.image + '" class="w-16 h-16 object-cover rounded-xl mr-3" onerror="this.src=\'https://via.placeholder.com/100\'">';
+        html += '<div class="flex-1"><h5 class="text-xs font-bold">' + prod.name + '</h5>';
+        html += '<p class="text-[10px] text-gray-500">Stok: ' + prod.stock + ' • ★ ' + prod.rating + '</p>';
+        html += '<p class="text-sm font-bold text-primary mt-1">Rp ' + prod.price.toLocaleString('id-ID') + '</p></div>';
+        html += '<button onclick="buyPartnerProduct(' + p.id + ',' + prod.id + ')" class="bg-primary text-white text-[10px] font-bold px-3 py-2 rounded-lg">Beli</button>';
+        html += '</div>';
+    });
+    html += '</div>';
+    document.getElementById('partnerContent').innerHTML = html;
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function buyPartnerProduct(partnerId, prodId) {
+    const p = PARTNERS.find(x => x.id === partnerId);
+    if (!p) return;
+    const prod = p.products.find(x => x.id === prodId);
+    if (!prod) return;
+    if (prod.stock <= 0) return showToast('Stok habis', 'error');
+    prod.stock--;
+    showToast(prod.name + ' ditambahkan ke keranjang!');
+    showPartnerDetail(partnerId);
+}
+
+function closePartner() {
+    const m = document.getElementById('partnerModal');
+    m.classList.remove('show');
+    setTimeout(() => m.classList.add('hidden'), 300);
+}
+
+// ==========================================
+// TICKETS PAGE (Full Page)
+// ==========================================
+function openTicketsPage() {
+    const page = document.getElementById('ticketsPage');
+    page.classList.remove('hidden');
+    page.classList.add('flex');
+    renderTicketsPage();
+}
+
+function closeTicketsPage() {
+    const page = document.getElementById('ticketsPage');
+    page.classList.add('hidden');
+    page.classList.remove('flex');
+}
+
+function renderTicketsPage() {
+    const container = document.getElementById('ticketsPageContent');
+    if (!container) return;
+    
+    if (!currentUser) {
+        container.innerHTML = '<div class="text-center py-10"><p class="text-gray-500 mb-4">Login untuk melihat tiket</p><button onclick="closeTicketsPage();openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
+        return;
+    }
+    
+    if (userTickets.length === 0) {
+        container.innerHTML = '<div class="flex flex-col items-center pt-10"><div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-400 text-sm mb-4">Belum ada tiket</p><button onclick="closeTicketsPage();switchTab(\'explore\')" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm">Cari Spot</button></div>';
+        return;
+    }
+    
+    let html = '<p class="text-xs text-gray-500 mb-3">' + userTickets.length + ' tiket ditemukan</p>';
+    userTickets.forEach((t, i) => {
+        const statusColor = t.status === 'Selesai' ? 'green' : t.status === 'Dibatalkan' ? 'red' : 'blue';
+        let actionBtn = '';
+        if (t.status === 'Selesai' && !t.reviewed) actionBtn = '<button onclick="closeTicketsPage();openReviewFor(' + i + ')" class="flex-1 bg-accent text-white py-2 rounded-xl text-xs font-bold">Review</button>';
+        else if (t.status === 'Aktif') actionBtn = '<button onclick="cancelTicket(' + i + ');renderTicketsPage()" class="flex-1 bg-red-100 text-red-600 py-2 rounded-xl text-xs font-bold">Batalkan</button>';
+        else if (t.reviewed) actionBtn = '<button class="flex-1 bg-green-100 text-green-600 py-2 rounded-xl text-xs font-bold" disabled>✓ Reviewed</button>';
+        
+        html += '<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">';
+        html += '<div class="flex justify-between items-center border-b pb-3 mb-3"><span class="font-bold text-primary text-sm">' + t.spotName + '</span><span class="bg-' + statusColor + '-100 text-' + statusColor + '-700 text-[10px] px-2 py-1 rounded font-bold">' + t.status + '</span></div>';
+        html += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>ID</span><span class="font-semibold text-dark">' + t.id + '</span></div>';
+        html += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>Tanggal</span><span class="font-semibold text-dark">' + t.date + '</span></div>';
+        html += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>Jumlah</span><span class="font-semibold text-dark">' + t.qty + ' Orang</span></div>';
+        html += '<div class="flex justify-between text-xs text-gray-500 mt-3 pt-3 border-t"><span>Total</span><span class="font-bold text-primary">Rp ' + t.total.toLocaleString('id-ID') + '</span></div>';
+        html += '<div class="flex gap-2 mt-4"><button onclick="openTicketDetail(' + i + ')" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-xs font-bold">E-Tiket</button>' + actionBtn + '</div></div>';
+    });
+    container.innerHTML = html;
+}
 
 // ==========================================
 // EVENTS
@@ -744,7 +1085,6 @@ function renderEvents(container) {
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
-
 function switchEventTab(tab) { currentEventTab = tab; renderEvents(document.getElementById('app-content')); }
 
 function openEventDetail(id) {
@@ -773,13 +1113,11 @@ function openEventDetail(id) {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function closeEventDetail() {
     const m = document.getElementById('eventModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
 function registerEvent(id) {
     if (!currentUser) { closeEventDetail(); return openAuth(); }
     const e = eventsData.find(ev => ev.id === id);
@@ -796,7 +1134,6 @@ function registerEvent(id) {
     closeEventDetail();
     renderEvents(document.getElementById('app-content'));
 }
-
 function shareEvent(id) {
     const e = eventsData.find(ev => ev.id === id);
     if (!e) return;
@@ -839,7 +1176,6 @@ function renderCommunity(container) {
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
-
 function toggleLike(id) {
     const allPosts = [...myPosts, ...communityPosts];
     const p = allPosts.find(x => x.id === id);
@@ -847,7 +1183,6 @@ function toggleLike(id) {
     p.liked = !p.liked; p.likes += p.liked ? 1 : -1;
     save(); renderCommunity(document.getElementById('app-content'));
 }
-
 function sharePost(id) {
     const allPosts = [...myPosts, ...communityPosts];
     const p = allPosts.find(x => x.id === id);
@@ -856,7 +1191,6 @@ function sharePost(id) {
     if (navigator.share) navigator.share({ title: 'MancingYuk!', text }).catch(() => fallbackCopy(text));
     else fallbackCopy(text);
 }
-
 function openPostModal() {
     const sel = document.getElementById('postSpot');
     sel.innerHTML = '<option value="">Pilih Spot (Opsional)</option>' + spots.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('');
@@ -869,7 +1203,6 @@ function closePostModal() {
     document.getElementById('postModal').classList.add('hidden');
     document.getElementById('postModal').classList.remove('flex');
 }
-
 function submitPost() {
     const img = document.getElementById('postImage').value.trim() || getImgLocal('community',1);
     const imgFallback = document.getElementById('postImage').value.trim() || getImgFallback('community',1);
@@ -919,7 +1252,7 @@ function renderProfile(container) {
                         </div>
                     </div>
                 </div>
-                <div onclick="openLoyalty()" class="bg-gradient-to-r from-primary to-blue-400 rounded-2xl p-4 text-white shadow-lg mb-4 cursor-pointer pulse-glow">
+                <div onclick="openLoyalty()" class="bg-gradient-to-r from-primary to-blue-400 rounded-2xl p-4 text-white shadow-lg mb-4 cursor-pointer">
                     <div class="flex justify-between items-center">
                         <div><p class="text-xs text-blue-100">Poin MancingYuk</p><p class="text-2xl font-bold">${currentUser.points.toLocaleString('id-ID')}</p></div>
                         <div class="text-right"><p class="text-[10px] text-blue-100">Achievements</p><p class="text-lg font-bold">${unlockedAch}/${achievements.length}</p></div>
@@ -958,20 +1291,20 @@ function renderProfile(container) {
                 </div>
                 <h3 class="font-bold text-dark mb-3">Akun & Pengaturan</h3>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 mb-4">
-                    <button onclick="switchTab('tickets')" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🎫</div><span class="text-sm font-medium">Tiket Saya</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="openTicketsPage()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">🎫</div><span class="text-sm font-medium">Tiket Saya</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                     <button onclick="openEditProfile()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">👤</div><span class="text-sm font-medium">Edit Profil</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                     <button onclick="openPassword()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">🔒</div><span class="text-sm font-medium">Ubah Password</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                     <button onclick="showHistory()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">📜</div><span class="text-sm font-medium">Riwayat Transaksi</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
                 <h3 class="font-bold text-dark mb-3">Lainnya</h3>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 mb-4">
-                    <button onclick="showPartners()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">🛒</div><span class="text-sm font-medium">Toko Partner</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                    <button onclick="showAllPartners()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">🛒</div><span class="text-sm font-medium">Toko Partner</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                     <button onclick="showMerch()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">👕</div><span class="text-sm font-medium">Merchandise</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                     <button onclick="openAbout()" class="w-full flex items-center justify-between p-4"><div class="flex items-center space-x-3"><div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">ℹ️</div><span class="text-sm font-medium">Visi & Misi</span></div><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
                 <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-3.5 rounded-xl font-bold border border-red-100 mb-6">Keluar Akun</button>
                 <div class="text-center pb-4">
-                    <p class="text-xs text-gray-400">MancingYuk! v2.1.0</p>
+                    <p class="text-xs text-gray-400">MancingYuk! v3.0.0</p>
                     <p class="text-[10px] text-gray-300 mt-1">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
                 </div>
             </div>
@@ -983,7 +1316,8 @@ function renderProfile(container) {
 }
 
 // ==========================================
-// FISH GUIDE
+// FISH GUIDE, TIPS, RECIPES, CATCH LOG, ACHIEVEMENTS, LEADERBOARD
+// (Sama seperti sebelumnya, tidak berubah)
 // ==========================================
 function openFishGuide() {
     const modal = document.getElementById('notifModal');
@@ -1003,17 +1337,14 @@ function openFishGuide() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function openFishDetail(i) {
     const f = FISH_SPECIES[i];
     if (!f) return;
     const modal = document.getElementById('notifModal');
     document.getElementById('notifContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold">${f.name}</h3>
-            <button onclick="openFishGuide()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-        </div>
+        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">${f.name}</h3>
+        <button onclick="openFishGuide()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button></div>
         ${imgTag(f.image, f.imageFallback, f.name, "w-full h-40 object-cover rounded-2xl mb-4")}
         <p class="text-xs italic text-gray-500 mb-2">${f.latin}</p>
         <p class="text-sm text-gray-700 mb-4">${f.desc}</p>
@@ -1026,10 +1357,6 @@ function openFishDetail(i) {
         <button onclick="openFishGuide()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
-
-// ==========================================
-// TIPS
-// ==========================================
 function openTips() {
     const modal = document.getElementById('notifModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1048,30 +1375,20 @@ function openTips() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function openTipDetail(i) {
     const t = TIPS_DATA[i];
     if (!t) return;
     const modal = document.getElementById('notifModal');
     document.getElementById('notifContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold flex-1">${t.title}</h3>
-            <button onclick="openTips()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-        </div>
+        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold flex-1">${t.title}</h3>
+        <button onclick="openTips()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button></div>
         ${imgTag(t.image, t.imageFallback, t.title, "w-full h-40 object-cover rounded-2xl mb-4")}
-        <div class="flex gap-2 mb-4">
-            <span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">${t.category}</span>
-            <span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">📖 ${t.readTime}</span>
-        </div>
+        <div class="flex gap-2 mb-4"><span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">${t.category}</span><span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-1 rounded font-bold">📖 ${t.readTime}</span></div>
         <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line mb-4">${t.content}</p>
-        <button onclick="openTips()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali ke Daftar</button>
+        <button onclick="openTips()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
-
-// ==========================================
-// RECIPES
-// ==========================================
 function openRecipes() {
     const modal = document.getElementById('notifModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1089,7 +1406,6 @@ function openRecipes() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function openRecipeDetail(i) {
     const r = RECIPES_DATA[i];
     if (!r) return;
@@ -1098,15 +1414,10 @@ function openRecipeDetail(i) {
     const stepHtml = r.steps.map((x, idx) => '<div class="flex gap-3 mb-2"><span class="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">' + (idx + 1) + '</span><p class="text-xs text-gray-700 pt-1">' + x + '</p></div>').join('');
     document.getElementById('notifContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold flex-1">${r.name}</h3>
-            <button onclick="openRecipes()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-        </div>
+        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold flex-1">${r.name}</h3>
+        <button onclick="openRecipes()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button></div>
         ${imgTag(r.image, r.imageFallback, r.name, "w-full h-40 object-cover rounded-2xl mb-4")}
-        <div class="flex gap-2 mb-4">
-            <span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">⏱️ ${r.time}</span>
-            <span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">📊 ${r.level}</span>
-        </div>
+        <div class="flex gap-2 mb-4"><span class="bg-blue-100 text-primary text-[10px] px-2 py-1 rounded font-bold">⏱️ ${r.time}</span><span class="bg-green-100 text-green-700 text-[10px] px-2 py-1 rounded font-bold">📊 ${r.level}</span></div>
         <h4 class="font-bold text-sm mb-2">🧂 Bahan-bahan</h4>
         <ul class="text-xs text-gray-600 space-y-1 list-disc pl-5 mb-4">${ingHtml}</ul>
         <h4 class="font-bold text-sm mb-2">👨‍🍳 Cara Membuat</h4>
@@ -1114,10 +1425,6 @@ function openRecipeDetail(i) {
         <button onclick="openRecipes()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
-
-// ==========================================
-// CATCH LOG
-// ==========================================
 function openCatchLog() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('catchLogModal');
@@ -1141,10 +1448,8 @@ function openCatchLog() {
     });
     document.getElementById('catchLogContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold">📖 Catatan Tangkapan</h3>
-            <button onclick="closeCatchLog()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-        </div>
+        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">📖 Catatan Tangkapan</h3>
+        <button onclick="closeCatchLog()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>
         <div class="grid grid-cols-3 gap-2 mb-4">
             <div class="bg-blue-50 rounded-xl p-3 text-center"><p class="text-[10px] text-gray-500">Total</p><p class="text-lg font-bold text-primary">${userCatches.length}</p></div>
             <div class="bg-green-50 rounded-xl p-3 text-center"><p class="text-[10px] text-gray-500">Berat</p><p class="text-lg font-bold text-secondary">${totalWeight.toFixed(1)}kg</p></div>
@@ -1157,13 +1462,11 @@ function openCatchLog() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function closeCatchLog() {
     const m = document.getElementById('catchLogModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
 function openAddCatch() {
     const sel = document.getElementById('catchSpot');
     sel.innerHTML = spots.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('');
@@ -1174,7 +1477,6 @@ function closeAddCatch() {
     document.getElementById('addCatchModal').classList.add('hidden');
     document.getElementById('addCatchModal').classList.remove('flex');
 }
-
 function saveCatch() {
     const fish = document.getElementById('catchFish').value;
     const weight = parseFloat(document.getElementById('catchWeight').value);
@@ -1188,10 +1490,6 @@ function saveCatch() {
     showToast('Tangkapan dicatat! +100 poin');
     openCatchLog();
 }
-
-// ==========================================
-// ACHIEVEMENTS
-// ==========================================
 function openAchievements() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('notifModal');
@@ -1212,7 +1510,6 @@ function openAchievements() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function checkAchievements() {
     if (!currentUser) return;
     let changed = false;
@@ -1226,10 +1523,6 @@ function checkAchievements() {
     if (!achievements[7].unlocked && currentUser.points >= 5000) { achievements[7].unlocked = true; currentUser.points += achievements[7].points; changed = true; }
     if (changed) save();
 }
-
-// ==========================================
-// LEADERBOARD
-// ==========================================
 function openLeaderboard() {
     const modal = document.getElementById('notifModal');
     const board = [...LEADERBOARD];
@@ -1258,52 +1551,21 @@ function openLeaderboard() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
-// ==========================================
-// TICKETS
-// ==========================================
 function renderTickets(container) {
-    try {
-        if (!currentUser) {
-            container.innerHTML = '<div class="flex flex-col items-center justify-center h-full pt-20 px-8 text-center"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-500 mb-4 text-sm">Login untuk melihat tiket</p><button onclick="openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
-            return;
-        }
-        if (userTickets.length === 0) {
-            container.innerHTML = '<div class="px-5 pt-6"><h2 class="text-xl font-bold mb-4">Tiket Saya</h2><div class="flex flex-col items-center pt-20"><div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-400 text-sm mb-4">Belum ada tiket</p><button onclick="switchTab(\'explore\')" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm">Cari Spot</button></div></div>';
-            return;
-        }
-        let ticketsHtml = '';
-        userTickets.forEach((t, i) => {
-            const statusColor = t.status === 'Selesai' ? 'green' : t.status === 'Dibatalkan' ? 'red' : 'blue';
-            let actionBtn = '';
-            if (t.status === 'Selesai' && !t.reviewed) actionBtn = '<button onclick="openReviewFor(' + i + ')" class="flex-1 bg-accent text-white py-2 rounded-xl text-xs font-bold">Review</button>';
-            else if (t.status === 'Aktif') actionBtn = '<button onclick="cancelTicket(' + i + ')" class="flex-1 bg-red-100 text-red-600 py-2 rounded-xl text-xs font-bold">Batalkan</button>';
-            else if (t.reviewed) actionBtn = '<button class="flex-1 bg-green-100 text-green-600 py-2 rounded-xl text-xs font-bold" disabled>✓ Reviewed</button>';
-            ticketsHtml += '<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">';
-            ticketsHtml += '<div class="flex justify-between items-center border-b pb-3 mb-3"><span class="font-bold text-primary text-sm">' + t.spotName + '</span><span class="bg-' + statusColor + '-100 text-' + statusColor + '-700 text-[10px] px-2 py-1 rounded font-bold">' + t.status + '</span></div>';
-            ticketsHtml += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>ID</span><span class="font-semibold text-dark">' + t.id + '</span></div>';
-            ticketsHtml += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>Tanggal</span><span class="font-semibold text-dark">' + t.date + '</span></div>';
-            ticketsHtml += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>Jumlah</span><span class="font-semibold text-dark">' + t.qty + ' Orang</span></div>';
-            ticketsHtml += '<div class="flex justify-between text-xs text-gray-500 mt-3 pt-3 border-t"><span>Total</span><span class="font-bold text-primary">Rp ' + t.total.toLocaleString('id-ID') + '</span></div>';
-            ticketsHtml += '<div class="flex gap-2 mt-4"><button onclick="openTicketDetail(' + i + ')" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-xl text-xs font-bold">E-Tiket</button>' + actionBtn + '</div></div>';
-        });
-        container.innerHTML = '<div class="px-5 pt-6 pb-4"><h2 class="text-xl font-bold mb-4">Tiket Saya (' + userTickets.length + ')</h2>' + ticketsHtml + '</div>';
-    } catch (err) {
-        console.error('renderTickets error:', err);
-        container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
+    if (!currentUser) {
+        container.innerHTML = '<div class="flex flex-col items-center justify-center h-full pt-20 px-8 text-center"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-500 mb-4 text-sm">Login untuk melihat tiket</p><button onclick="openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
+        return;
     }
+    openTicketsPage();
 }
-
 function openTicketDetail(index) {
     const t = userTickets[index];
     if (!t) return;
     const m = document.getElementById('ticketDetailModal');
     document.getElementById('ticketDetailContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold">E-Tiket</h3>
-            <button onclick="closeTicketDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-        </div>
+        <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">E-Tiket</h3>
+        <button onclick="closeTicketDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>
         ${imgTag(t.image, t.imageFallback || getImgFallback('spots',1), t.spotName, "w-full h-40 object-cover rounded-2xl mb-4")}
         <div class="bg-white border-2 border-dashed border-primary rounded-2xl p-5 mb-4">
             <p class="text-xs text-gray-500 mb-1">ID Tiket</p>
@@ -1327,13 +1589,11 @@ function openTicketDetail(index) {
     m.classList.remove('hidden');
     setTimeout(() => m.classList.add('show'), 10);
 }
-
 function closeTicketDetail() {
     const m = document.getElementById('ticketDetailModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
 function shareTicket(i) {
     const t = userTickets[i];
     if (!t) return;
@@ -1341,13 +1601,13 @@ function shareTicket(i) {
     if (navigator.share) navigator.share({ title: 'E-Tiket', text }).catch(() => fallbackCopy(text));
     else fallbackCopy(text);
 }
-
 function cancelTicket(index) {
     if (!confirm('Yakin membatalkan tiket ini?')) return;
     userTickets[index].status = 'Dibatalkan';
     save();
     showToast('Tiket dibatalkan', 'info');
-    renderTickets(document.getElementById('app-content'));
+    if (!document.getElementById('ticketsPage').classList.contains('hidden')) renderTicketsPage();
+    else renderTickets(document.getElementById('app-content'));
 }
 
 // ==========================================
@@ -1378,6 +1638,7 @@ function openDetail(id) {
             <button onclick="closeDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         ${imgTag(selectedSpot.image, imgFb, selectedSpot.name, "w-full h-48 object-cover rounded-2xl mb-4")}
+        <button onclick="closeDetail();openSpotMap(${selectedSpot.id})" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2">📍 Lihat Lokasi di Peta</button>
         <div class="flex space-x-2 mb-4 overflow-x-auto hide-scrollbar">${facilitiesHtml}</div>
         <p class="text-xs text-gray-500 leading-relaxed mb-4">${selectedSpot.description}</p>
         <button onclick="openChat(${selectedSpot.id}, '${selectedSpot.owner}')" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2">💬 Chat dengan ${selectedSpot.owner}</button>
@@ -1387,14 +1648,10 @@ function openDetail(id) {
             <div class="flex justify-between text-xs text-gray-600 mb-1"><span>Biaya Layanan (8%)</span><span class="font-semibold">Rp ${platformFee.toLocaleString('id-ID')}</span></div>
             <div class="border-t border-blue-200 mt-2 pt-2 flex justify-between text-sm font-bold text-dark"><span>Diterima Pemilik</span><span>Rp ${ownerRevenue.toLocaleString('id-ID')}</span></div>
         </div>
-        <div class="mb-4">
-            <label class="block text-xs font-medium text-gray-500 mb-2">Tanggal</label>
-            <input type="date" id="bookingDate" min="${today}" value="${today}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
-        </div>
-        <div class="mb-4">
-            <label class="block text-xs font-medium text-gray-500 mb-2">Jumlah Orang</label>
-            <input type="number" id="qtyInput" min="1" max="10" value="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" oninput="updateTotal()">
-        </div>
+        <div class="mb-4"><label class="block text-xs font-medium text-gray-500 mb-2">Tanggal</label>
+        <input type="date" id="bookingDate" min="${today}" value="${today}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"></div>
+        <div class="mb-4"><label class="block text-xs font-medium text-gray-500 mb-2">Jumlah Orang</label>
+        <input type="number" id="qtyInput" min="1" max="10" value="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" oninput="updateTotal()"></div>
         <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-6">
             <span class="text-sm font-medium text-gray-600">Total</span>
             <p id="totalPrice" class="text-xl font-bold text-primary">Rp ${(selectedSpot.price * 2).toLocaleString('id-ID')}</p>
@@ -1408,19 +1665,16 @@ function openDetail(id) {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
-
 function closeDetail() {
     const m = document.getElementById('detailModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
 function updateTotal() {
     if (!selectedSpot) return;
     const qty = parseInt(document.getElementById('qtyInput').value) || 1;
     document.getElementById('totalPrice').innerText = 'Rp ' + (selectedSpot.price * qty).toLocaleString('id-ID');
 }
-
 function shareSpot(id) {
     const s = spots.find(x => x.id === id);
     if (!s) return;
@@ -1428,14 +1682,9 @@ function shareSpot(id) {
     if (navigator.share) navigator.share({ title: s.name, text }).catch(() => fallbackCopy(text));
     else fallbackCopy(text);
 }
-
-// ==========================================
-// CHAT
-// ==========================================
 function openChat(spotId, ownerName) {
     currentChatOwner = ownerName;
     document.getElementById('chatTitle').innerText = ownerName;
-    // Set avatar dengan fallback
     const avatarEl = document.getElementById('chatAvatar');
     avatarEl.src = IMG.avatars.owner.local;
     avatarEl.dataset.fallback = IMG.avatars.owner.fallback;
@@ -1447,7 +1696,6 @@ function openChat(spotId, ownerName) {
     document.getElementById('chatModal').classList.add('flex');
     save();
 }
-
 function renderChatMessages() {
     const msgs = chatHistory[currentChatOwner] || [];
     let html = '';
@@ -1463,7 +1711,6 @@ function renderChatMessages() {
     c.innerHTML = html;
     c.scrollTop = c.scrollHeight;
 }
-
 function sendChat() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
@@ -1481,15 +1728,10 @@ function sendChat() {
         save(); renderChatMessages();
     }, 1000);
 }
-
 function closeChat() {
     document.getElementById('chatModal').classList.add('hidden');
     document.getElementById('chatModal').classList.remove('flex');
 }
-
-// ==========================================
-// CHECKOUT
-// ==========================================
 function openCheckout() {
     const date = document.getElementById('bookingDate').value;
     const qty = parseInt(document.getElementById('qtyInput').value);
@@ -1510,7 +1752,6 @@ function openCheckout() {
     document.getElementById('checkoutModal').classList.remove('hidden');
     document.getElementById('checkoutModal').classList.add('flex');
 }
-
 function updateCheckoutTotal() {
     if (!bookingData.total) return;
     const usePts = document.getElementById('usePoints').checked;
@@ -1525,12 +1766,10 @@ function updateCheckoutTotal() {
     bookingData.finalTotal = total;
     document.getElementById('checkoutTotal').innerText = 'Rp ' + total.toLocaleString('id-ID');
 }
-
 function closeCheckout() {
     document.getElementById('checkoutModal').classList.add('hidden');
     document.getElementById('checkoutModal').classList.remove('flex');
 }
-
 function processPayment() {
     const btn = document.getElementById('payBtn');
     btn.innerHTML = 'Memproses...';
@@ -1575,17 +1814,12 @@ function processPayment() {
         document.getElementById('successModal').classList.add('flex');
     }, 1200);
 }
-
 function closeSuccess(toHome) {
     document.getElementById('successModal').classList.add('hidden');
     document.getElementById('successModal').classList.remove('flex');
     if (toHome) switchTab('home');
-    else switchTab('tickets');
+    else openTicketsPage();
 }
-
-// ==========================================
-// REVIEW
-// ==========================================
 function openReviewFor(index) {
     reviewIndex = index; tempRating = 5; updateStars();
     document.getElementById('reviewText').value = '';
@@ -1610,12 +1844,8 @@ function submitReview() {
     }
     checkAchievements(); save(); closeReview();
     showToast('Review ' + tempRating + '★ terkirim! +50 poin');
-    renderTickets(document.getElementById('app-content'));
+    renderTicketsPage();
 }
-
-// ==========================================
-// NOTIFIKASI
-// ==========================================
 function openNotifications() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('notifModal');
@@ -1659,10 +1889,6 @@ function closeNotif() {
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
-// ==========================================
-// PROFILE EDIT
-// ==========================================
 function openEditProfile() {
     document.getElementById('editName').value = currentUser.name;
     document.getElementById('editEmail').value = currentUser.email;
@@ -1704,10 +1930,6 @@ function showHistory() {
     const spent = userTickets.filter(t => t.status !== 'Dibatalkan').reduce((s, t) => s + t.total, 0);
     alert('📜 Riwayat\n\nTotal Transaksi: ' + total + '\nTotal Belanja: Rp ' + spent.toLocaleString('id-ID') + '\nPoin: ' + currentUser.points.toLocaleString('id-ID'));
 }
-
-// ==========================================
-// LOYALTY
-// ==========================================
 function openLoyalty() {
     const tiers = [
         { name: "Bronze", min: 0, max: 1999, benefit: "Bonus 100 poin per booking", color: "text-orange-700" },
@@ -1749,29 +1971,6 @@ function closeLoyalty() {
     document.getElementById('loyaltyModal').classList.add('hidden');
     document.getElementById('loyaltyModal').classList.remove('flex');
 }
-
-// ==========================================
-// PARTNERS & MERCH
-// ==========================================
-function showPartners() {
-    let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
-    html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Toko Partner</h3>';
-    html += '<button onclick="closeNotif()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>';
-    html += '<div class="space-y-3">';
-    PARTNERS.forEach(p => {
-        html += '<div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center shadow-sm">';
-        html += '<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mr-3">' + p.logo + '</div>';
-        html += '<div class="flex-1"><h4 class="font-bold text-sm">' + p.name + '</h4>';
-        html += '<p class="text-[10px] text-gray-500">' + p.desc + '</p>';
-        html += '<span class="inline-block mt-1 bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded font-bold">' + p.discount + '</span>';
-        html += '</div></div>';
-    });
-    html += '</div>';
-    document.getElementById('notifContent').innerHTML = html;
-    document.getElementById('notifModal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('notifModal').classList.add('show'), 10);
-}
-
 function showMerch() {
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
     html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Merchandise</h3>';
@@ -1791,7 +1990,6 @@ function showMerch() {
     document.getElementById('notifModal').classList.remove('hidden');
     setTimeout(() => document.getElementById('notifModal').classList.add('show'), 10);
 }
-
 function buyMerch(id) {
     const m = MERCHANDISE.find(x => x.id === id);
     if (!m) return;
@@ -1802,15 +2000,17 @@ function buyMerch(id) {
 }
 
 // ==========================================
-// OWNER DASHBOARD
+// OWNER DASHBOARD (dengan tombol Tambah Spot)
 // ==========================================
 function openOwnerDashboard() {
-    const mySpot = spots.find(s => s.ownerId === "owner1") || spots[0];
+    const mySpots = spots.filter(s => s.ownerId === "owner1");
+    const mySpot = mySpots[0] || spots[0];
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
     const platformFee = revenue * 0.08;
     const netRevenue = revenue - platformFee;
     const confirmed = ownerBookings.filter(b => b.status === 'Confirmed').length;
     const pending = ownerBookings.filter(b => b.status === 'Pending').length;
+    
     let bookingsHtml = '';
     ownerBookings.forEach((b, i) => {
         const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
@@ -1820,6 +2020,17 @@ function openOwnerDashboard() {
         bookingsHtml += '<p class="text-[10px] text-gray-500">' + b.date + ' • ' + b.qty + ' orang</p>';
         bookingsHtml += '<div class="flex justify-between items-center mt-2"><p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>' + btn + '</div></div>';
     });
+    
+    let mySpotsHtml = '';
+    mySpots.forEach(s => {
+        mySpotsHtml += '<div class="bg-white border border-gray-100 rounded-xl p-3 flex items-center mb-2">';
+        mySpotsHtml += imgTag(s.image, s.imageFallback, s.name, "w-12 h-12 object-cover rounded-lg mr-3");
+        mySpotsHtml += '<div class="flex-1"><p class="text-xs font-bold">' + s.name + '</p>';
+        mySpotsHtml += '<p class="text-[10px] text-gray-500">' + s.city + ' • Rp ' + s.price.toLocaleString('id-ID') + '</p></div>';
+        mySpotsHtml += '<button onclick="managePrice(' + s.id + ')" class="text-primary text-xs">✏️</button>';
+        mySpotsHtml += '</div>';
+    });
+
     document.getElementById('ownerSpotContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
         <div class="flex justify-between items-center mb-4">
@@ -1827,7 +2038,7 @@ function openOwnerDashboard() {
             <button onclick="closeOwner()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         <div class="bg-dark rounded-2xl p-4 text-white mb-4">
-            <p class="text-xs text-gray-300">Kelola: ${mySpot.name}</p>
+            <p class="text-xs text-gray-300">Kelola: ${mySpots.length} spot</p>
             <div class="grid grid-cols-2 gap-3 mt-3">
                 <div class="bg-white bg-opacity-10 p-3 rounded-xl"><p class="text-[10px] text-gray-300">Pendapatan</p><p class="text-base font-bold text-green-400">Rp ${netRevenue.toLocaleString('id-ID')}</p></div>
                 <div class="bg-white bg-opacity-10 p-3 rounded-xl"><p class="text-[10px] text-gray-300">Booking</p><p class="text-base font-bold text-accent">${ownerBookings.length}</p></div>
@@ -1835,9 +2046,15 @@ function openOwnerDashboard() {
                 <div class="bg-white bg-opacity-10 p-3 rounded-xl"><p class="text-[10px] text-gray-300">Pending</p><p class="text-base font-bold text-yellow-300">${pending}</p></div>
             </div>
         </div>
-        <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-[10px] text-gray-600">
-            <p><b>Revenue Model:</b> Komisi 8% (Rp ${platformFee.toLocaleString('id-ID')}). Anda terima Rp ${netRevenue.toLocaleString('id-ID')}.</p>
-        </div>
+        
+        <button onclick="openAddSpot()" class="w-full bg-gradient-to-r from-secondary to-green-400 text-white py-3 rounded-xl font-bold shadow-lg mb-4 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Tambah Spot Pemancingan Baru
+        </button>
+        
+        <h4 class="font-bold text-sm mb-2">Spot Saya</h4>
+        <div class="mb-4">${mySpotsHtml || '<p class="text-xs text-gray-400 text-center py-3">Belum ada spot</p>'}</div>
+        
         <h4 class="font-bold text-sm mb-2">Pengelolaan</h4>
         <div class="space-y-2 mb-4">
             <button onclick="managePrice(${mySpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
@@ -1860,20 +2077,17 @@ function openOwnerDashboard() {
     document.getElementById('ownerSpotModal').classList.remove('hidden');
     setTimeout(() => document.getElementById('ownerSpotModal').classList.add('show'), 10);
 }
-
 function closeOwner() {
     const m = document.getElementById('ownerSpotModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-
 function confirmBooking(i) {
     ownerBookings[i].status = 'Confirmed';
     save(); showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
     closeOwner();
     setTimeout(() => openOwnerDashboard(), 400);
 }
-
 function managePrice(spotId) {
     const s = spots.find(x => x.id === spotId);
     if (!s) return;
@@ -1881,28 +2095,361 @@ function managePrice(spotId) {
     if (newPrice && !isNaN(newPrice) && parseInt(newPrice) > 0) {
         s.price = parseInt(newPrice);
         showToast('Harga diubah!');
+        save();
         closeOwner();
         setTimeout(() => openOwnerDashboard(), 400);
     }
 }
-
 function togglePremium(spotId) {
     const s = spots.find(x => x.id === spotId);
     if (!s) return;
     s.premium = !s.premium;
+    save();
     showToast(s.premium ? 'Premium aktif!' : 'Premium nonaktif', s.premium ? 'success' : 'info');
     closeOwner();
     setTimeout(() => openOwnerDashboard(), 400);
 }
-
 function showStats() {
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
     alert('📊 Statistik\n\nTotal Booking: ' + ownerBookings.length + '\nPendapatan Kotor: Rp ' + revenue.toLocaleString('id-ID') + '\nKomisi (8%): Rp ' + (revenue * 0.08).toLocaleString('id-ID') + '\nBersih: Rp ' + (revenue * 0.92).toLocaleString('id-ID'));
 }
-
 function showPromo() {
     const promo = prompt('Buat promo baru:');
     if (promo) showToast('Promo "' + promo + '" dibuat!');
+}
+
+// ==========================================
+// ADD SPOT (Owner)
+// ==========================================
+function openAddSpot() {
+    closeOwner();
+    const content = document.getElementById('addSpotContent');
+    content.innerHTML = `
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Tambah Spot Baru</h3>
+            <button onclick="closeAddSpot()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Spot</label>
+            <input type="text" id="newSpotName" placeholder="Contoh: Pemancingan Barokah" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Kota</label>
+            <input type="text" id="newSpotCity" placeholder="Contoh: Bekasi" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Jenis Ikan (pisahkan dengan koma)</label>
+            <input type="text" id="newSpotFish" placeholder="Lele, Nila, Gurame" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Harga per Orang</label>
+            <input type="number" id="newSpotPrice" placeholder="50000" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Jumlah Slot</label>
+            <input type="number" id="newSpotSlots" placeholder="20" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Jam Operasional</label>
+            <input type="text" id="newSpotOpen" placeholder="06:00 - 22:00" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Fasilitas (pisahkan dengan koma)</label>
+            <input type="text" id="newSpotFacilities" placeholder="Saung, Parkir, Kantin" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>
+            <textarea id="newSpotDesc" rows="2" placeholder="Deskripsi singkat" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Latitude</label>
+                <input type="number" id="newSpotLat" step="0.0001" value="-6.2000" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Longitude</label>
+                <input type="number" id="newSpotLng" step="0.0001" value="106.8166" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+        </div>
+        <div class="mb-5">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Gambar URL (opsional)</label>
+            <input type="text" id="newSpotImage" placeholder="https://..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="closeAddSpot()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">Batal</button>
+            <button onclick="saveNewSpot()" class="flex-1 bg-secondary text-white py-3 rounded-xl font-bold">Simpan Spot</button>
+        </div>
+    `;
+    const modal = document.getElementById('addSpotModal');
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        document.getElementById('addSpotContent').style.transform = 'translateY(0)';
+    }, 10);
+}
+function closeAddSpot() {
+    const modal = document.getElementById('addSpotModal');
+    const content = document.getElementById('addSpotContent');
+    content.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        content.style.transform = '';
+    }, 300);
+}
+function saveNewSpot() {
+    const name = document.getElementById('newSpotName').value.trim();
+    const city = document.getElementById('newSpotCity').value.trim();
+    const fish = document.getElementById('newSpotFish').value.trim() || 'Lele';
+    const price = parseInt(document.getElementById('newSpotPrice').value);
+    const slots = parseInt(document.getElementById('newSpotSlots').value) || 20;
+    const open = document.getElementById('newSpotOpen').value.trim() || '06:00 - 22:00';
+    const facilities = document.getElementById('newSpotFacilities').value.split(',').map(x => x.trim()).filter(x => x);
+    const desc = document.getElementById('newSpotDesc').value.trim() || 'Pemancingan baru di MancingYuk!';
+    const lat = parseFloat(document.getElementById('newSpotLat').value) || -6.2;
+    const lng = parseFloat(document.getElementById('newSpotLng').value) || 106.8166;
+    const img = document.getElementById('newSpotImage').value.trim();
+    
+    if (!name || !city || !price) {
+        showToast('Nama, kota, dan harga wajib diisi', 'error');
+        return;
+    }
+    
+    const newId = Math.max(...spots.map(s => s.id)) + 1;
+    const newSpot = {
+        id: newId, name, location: fish, city, price,
+        rating: 5.0, reviews: 0, slots,
+        image: img || getImgLocal('spots', ((newId - 1) % 6) + 1),
+        imageFallback: img || getImgFallback('spots', ((newId - 1) % 6) + 1),
+        facilities: facilities.length > 0 ? facilities : ["Parkir", "Toilet"],
+        description: desc, owner: currentUser ? currentUser.name : "Owner",
+        ownerId: "owner1", premium: false, distance: 5.0, open,
+        lat, lng
+    };
+    spots.push(newSpot);
+    save();
+    closeAddSpot();
+    showToast('Spot "' + name + '" berhasil ditambahkan!');
+    setTimeout(() => openOwnerDashboard(), 400);
+}
+
+// ==========================================
+// ADMIN DASHBOARD
+// ==========================================
+function renderAdminDashboard(container) {
+    const totalRevenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
+    const platformRevenue = totalRevenue * 0.08;
+    const totalUsers = registeredUsers.length;
+    const totalSpots = spots.length;
+    const totalBookings = ownerBookings.length;
+    const totalOwners = registeredUsers.filter(u => u.type === 'owner').length;
+    const totalPemancing = registeredUsers.filter(u => u.type === 'pemancing').length;
+    
+    container.innerHTML = `
+        <div class="px-5 pt-4 pb-4 bg-dark text-white rounded-b-3xl">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-2xl">👑</div>
+                <div>
+                    <p class="text-xs text-gray-400">Selamat datang,</p>
+                    <h2 class="text-lg font-bold">${currentUser ? currentUser.name : 'Admin'}</h2>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400">Kelola seluruh platform MancingYuk!</p>
+        </div>
+
+        <div class="px-5 mt-4">
+            <h3 class="font-bold text-dark mb-3">📊 Statistik Platform</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-4 text-white shadow-lg">
+                    <p class="text-[10px] opacity-80">Total Pendapatan</p>
+                    <p class="text-xl font-bold mt-1">Rp ${platformRevenue.toLocaleString('id-ID')}</p>
+                    <p class="text-[9px] opacity-80 mt-1">Komisi 8% dari platform</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
+                    <p class="text-[10px] opacity-80">Transaksi Bruto</p>
+                    <p class="text-xl font-bold mt-1">Rp ${totalRevenue.toLocaleString('id-ID')}</p>
+                    <p class="text-[9px] opacity-80 mt-1">${totalBookings} booking</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-3">
+                <div class="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                    <p class="text-[10px] text-gray-500">Users</p>
+                    <p class="text-lg font-bold text-primary">${totalUsers}</p>
+                </div>
+                <div class="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                    <p class="text-[10px] text-gray-500">Spots</p>
+                    <p class="text-lg font-bold text-secondary">${totalSpots}</p>
+                </div>
+                <div class="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                    <p class="text-[10px] text-gray-500">Owners</p>
+                    <p class="text-lg font-bold text-accent">${totalOwners}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 mt-4">
+            <h3 class="font-bold text-dark mb-3">📈 Aktivitas</h3>
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
+                <div class="p-3 flex justify-between">
+                    <span class="text-xs text-gray-600">Total Pemancing</span>
+                    <span class="text-xs font-bold text-dark">${totalPemancing}</span>
+                </div>
+                <div class="p-3 flex justify-between">
+                    <span class="text-xs text-gray-600">Booking Pending</span>
+                    <span class="text-xs font-bold text-yellow-600">${ownerBookings.filter(b => b.status === 'Pending').length}</span>
+                </div>
+                <div class="p-3 flex justify-between">
+                    <span class="text-xs text-gray-600">Booking Confirmed</span>
+                    <span class="text-xs font-bold text-green-600">${ownerBookings.filter(b => b.status === 'Confirmed').length}</span>
+                </div>
+                <div class="p-3 flex justify-between">
+                    <span class="text-xs text-gray-600">Tiket Aktif</span>
+                    <span class="text-xs font-bold text-blue-600">${userTickets.filter(t => t.status === 'Aktif').length}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 mt-4 pb-4">
+            <h3 class="font-bold text-dark mb-3">⚡ Aksi Cepat</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="switchTab('admin-spots')" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-2 text-left shadow-sm">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">📍</div>
+                    <div><p class="text-xs font-bold">Kelola Spot</p><p class="text-[9px] text-gray-500">${totalSpots} spot</p></div>
+                </button>
+                <button onclick="switchTab('admin-users')" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-2 text-left shadow-sm">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">👥</div>
+                    <div><p class="text-xs font-bold">Kelola Users</p><p class="text-[9px] text-gray-500">${totalUsers} user</p></div>
+                </button>
+                <button onclick="switchTab('admin-bookings')" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-2 text-left shadow-sm">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">📋</div>
+                    <div><p class="text-xs font-bold">Booking</p><p class="text-[9px] text-gray-500">${totalBookings} transaksi</p></div>
+                </button>
+                <button onclick="openAbout()" class="bg-white border border-gray-100 p-3 rounded-xl flex items-center gap-2 text-left shadow-sm">
+                    <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">ℹ️</div>
+                    <div><p class="text-xs font-bold">Visi Misi</p><p class="text-[9px] text-gray-500">Tentang app</p></div>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderAdminSpots(container) {
+    let spotsHtml = '';
+    spots.forEach(s => {
+        spotsHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-3 shadow-sm">';
+        spotsHtml += '<div class="flex gap-3">';
+        spotsHtml += imgTag(s.image, s.imageFallback, s.name, "w-16 h-16 object-cover rounded-xl");
+        spotsHtml += '<div class="flex-1 min-w-0">';
+        spotsHtml += '<div class="flex items-center gap-1"><h4 class="text-sm font-bold text-dark truncate">' + s.name + '</h4>';
+        if (s.premium) spotsHtml += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold">⭐</span>';
+        spotsHtml += '</div>';
+        spotsHtml += '<p class="text-[10px] text-gray-500">📍 ' + s.city + '</p>';
+        spotsHtml += '<p class="text-[10px] text-gray-500">👤 ' + s.owner + '</p>';
+        spotsHtml += '<p class="text-xs font-bold text-primary mt-1">Rp ' + s.price.toLocaleString('id-ID') + ' • ' + s.slots + ' slot</p>';
+        spotsHtml += '</div></div>';
+        spotsHtml += '<div class="flex gap-2 mt-3">';
+        spotsHtml += '<button onclick="adminEditSpot(' + s.id + ')" class="flex-1 bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold">Edit</button>';
+        spotsHtml += '<button onclick="adminTogglePremium(' + s.id + ')" class="flex-1 bg-yellow-100 text-yellow-700 py-2 rounded-lg text-[10px] font-bold">' + (s.premium ? 'Un-Premium' : 'Premium') + '</button>';
+        spotsHtml += '<button onclick="adminDeleteSpot(' + s.id + ')" class="flex-1 bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold">Hapus</button>';
+        spotsHtml += '</div></div>';
+    });
+    
+    container.innerHTML = `
+        <div class="px-5 pt-4 pb-3 bg-white">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold">Kelola Spot</h2>
+                <span class="text-xs text-gray-500">${spots.length} spot</span>
+            </div>
+        </div>
+        <div class="px-5 mt-4 pb-4">${spotsHtml}</div>
+    `;
+}
+
+function adminEditSpot(id) {
+    const s = spots.find(x => x.id === id);
+    if (!s) return;
+    const newPrice = prompt('Edit harga spot "' + s.name + '":\nHarga saat ini: Rp ' + s.price.toLocaleString('id-ID'), s.price);
+    if (newPrice && !isNaN(newPrice) && parseInt(newPrice) > 0) {
+        s.price = parseInt(newPrice);
+        save(); showToast('Harga diubah!');
+        renderAdminSpots(document.getElementById('app-content'));
+    }
+}
+function adminTogglePremium(id) {
+    const s = spots.find(x => x.id === id);
+    if (!s) return;
+    s.premium = !s.premium;
+    save();
+    showToast(s.premium ? 'Premium aktif' : 'Premium nonaktif');
+    renderAdminSpots(document.getElementById('app-content'));
+}
+function adminDeleteSpot(id) {
+    if (!confirm('Yakin hapus spot ini?')) return;
+    spots = spots.filter(s => s.id !== id);
+    save();
+    showToast('Spot dihapus', 'info');
+    renderAdminSpots(document.getElementById('app-content'));
+}
+
+function renderAdminUsers(container) {
+    let usersHtml = '';
+    registeredUsers.forEach(u => {
+        const typeColor = u.type === 'owner' ? 'purple' : u.type === 'admin' ? 'red' : 'blue';
+        const typeLabel = u.type === 'owner' ? '🏪 Owner' : u.type === 'admin' ? '👑 Admin' : '🎣 Pemancing';
+        usersHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-2 flex items-center shadow-sm">';
+        usersHtml += '<img src="https://i.pravatar.cc/100?u=' + u.email + '" class="w-10 h-10 rounded-full mr-3" onerror="this.src=\'https://i.pravatar.cc/100\'">';
+        usersHtml += '<div class="flex-1 min-w-0">';
+        usersHtml += '<p class="text-xs font-bold text-dark truncate">' + u.name + '</p>';
+        usersHtml += '<p class="text-[10px] text-gray-500 truncate">' + u.email + '</p>';
+        usersHtml += '<div class="flex gap-1 mt-1"><span class="bg-' + typeColor + '-100 text-' + typeColor + '-700 text-[9px] px-1.5 py-0.5 rounded font-bold">' + typeLabel + '</span>';
+        usersHtml += '<span class="text-[9px] text-gray-400">' + u.joinDate + '</span></div>';
+        usersHtml += '</div></div>';
+    });
+    
+    container.innerHTML = `
+        <div class="px-5 pt-4 pb-3 bg-white">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold">Kelola Users</h2>
+                <span class="text-xs text-gray-500">${registeredUsers.length} user</span>
+            </div>
+        </div>
+        <div class="px-5 mt-4 pb-4">${usersHtml}</div>
+    `;
+}
+
+function renderAdminBookings(container) {
+    const total = ownerBookings.reduce((s, b) => s + b.total, 0);
+    const platform = total * 0.08;
+    
+    let bookingsHtml = '';
+    ownerBookings.forEach(b => {
+        const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
+        bookingsHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-2 shadow-sm">';
+        bookingsHtml += '<div class="flex justify-between items-center mb-1"><p class="text-xs font-bold text-dark">' + b.customer + '</p>';
+        bookingsHtml += '<span class="text-[9px] ' + statusCls + ' px-2 py-0.5 rounded font-bold">' + b.status + '</span></div>';
+        bookingsHtml += '<p class="text-[10px] text-gray-500">📍 ' + b.spot + '</p>';
+        bookingsHtml += '<p class="text-[10px] text-gray-500">📅 ' + b.date + ' • ' + b.qty + ' orang</p>';
+        bookingsHtml += '<div class="flex justify-between items-center mt-2 pt-2 border-t">';
+        bookingsHtml += '<p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>';
+        bookingsHtml += '<p class="text-[9px] text-gray-400">Komisi: Rp ' + (b.total * 0.08).toLocaleString('id-ID') + '</p>';
+        bookingsHtml += '</div></div>';
+    });
+    
+    container.innerHTML = `
+        <div class="px-5 pt-4 pb-3 bg-white">
+            <h2 class="text-lg font-bold mb-3">Kelola Booking</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="bg-blue-50 rounded-xl p-3">
+                    <p class="text-[10px] text-gray-500">Total Transaksi</p>
+                    <p class="text-base font-bold text-primary">Rp ${total.toLocaleString('id-ID')}</p>
+                </div>
+                <div class="bg-green-50 rounded-xl p-3">
+                    <p class="text-[10px] text-gray-500">Komisi Platform</p>
+                    <p class="text-base font-bold text-secondary">Rp ${platform.toLocaleString('id-ID')}</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-5 mt-4 pb-4">${bookingsHtml || '<p class="text-center text-gray-400 text-sm py-10">Belum ada booking</p>'}</div>
+    `;
 }
 
 // ==========================================
@@ -1940,7 +2487,7 @@ function fallbackCopy(text) {
 // INIT
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('MancingYuk! v2.1 loaded dengan local assets + fallback');
+    console.log('MancingYuk! v3.0 loaded dengan Admin, Peta, Toko Partner, Multi-Role');
     try {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
@@ -1954,7 +2501,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (!currentUser) {
             openAuth();
         } else {
-            switchTab('home');
+            updateRoleUI();
+            switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
         }
     } catch (err) {
         console.error('Init error:', err);
