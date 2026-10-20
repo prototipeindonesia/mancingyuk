@@ -1,5 +1,5 @@
 // ==========================================
-// MancingYuk! v3.2 - Role badge di Profil
+// MancingYuk! v3.3 - Firebase Edition
 // ==========================================
 
 // Reset corrupt storage
@@ -7,6 +7,22 @@ try {
     const keys = ['my_user','my_tickets','my_notifs','my_events','my_posts','owner_bookings','my_catches','chat_history','my_spots','my_admin','registered_users','my_achievements'];
     keys.forEach(k => { const v = localStorage.getItem(k); if (v) JSON.parse(v); });
 } catch (e) { console.warn('Storage corrupt, reset'); localStorage.clear(); }
+
+// ==========================================
+// 🔥 FIREBASE HELPER - Tunggu Firebase Siap
+// ==========================================
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        const check = () => {
+            if (window.firebaseReady && window.FB) {
+                resolve(window.FB);
+            } else {
+                setTimeout(check, 50);
+            }
+        };
+        check();
+    });
+}
 
 // ==========================================
 // HELPER GAMBAR
@@ -234,20 +250,12 @@ let notifications = safeLoad('my_notifs', [
 ]);
 let userEvents = safeLoad('my_events', []);
 let myPosts = safeLoad('my_posts', []);
-let ownerBookings = safeLoad('owner_bookings', [
-    { id: "B-001", customer: "Andi", spot: "Pemancingan Pak Budi", date: "15 Nov", qty: 2, total: 100000, status: "Confirmed" },
-    { id: "B-002", customer: "Siti", spot: "Pemancingan Pak Budi", date: "16 Nov", qty: 3, total: 150000, status: "Confirmed" },
-    { id: "B-003", customer: "Budi", spot: "Pemancingan Pak Budi", date: "17 Nov", qty: 1, total: 50000, status: "Pending" }
-]);
+let ownerBookings = safeLoad('owner_bookings', []);
 let userCatches = safeLoad('my_catches', []);
 let chatHistory = safeLoad('chat_history', {});
 let isDarkMode = safeLoad('dark_mode', false);
 let onboardingDone = safeLoad('onboarding_done', false);
-let registeredUsers = safeLoad('registered_users', [
-    { name: "Rizky Pemancing", email: "rizky@email.com", type: "pemancing", joinDate: "Januari 2024" },
-    { name: "Pak Budi", email: "budi@owner.com", type: "owner", joinDate: "Januari 2024" },
-    { name: "Haji Sejahtera", email: "sejahtera@owner.com", type: "owner", joinDate: "Februari 2024" }
-]);
+let registeredUsers = safeLoad('registered_users', []);
 
 let selectedSpot = null;
 let bookingData = {};
@@ -350,7 +358,7 @@ function finishOnboarding() {
 }
 
 // ==========================================
-// AUTH dengan 3 ROLE
+// AUTH dengan 3 ROLE + FIREBASE
 // ==========================================
 function toggleAuth(type) {
     const bL = document.getElementById('btn-login'), bS = document.getElementById('btn-signup');
@@ -366,99 +374,148 @@ function toggleAuth(type) {
     }
 }
 
-function handleLogin(e) {
+// 🔥 FIREBASE LOGIN
+async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPass').value;
     const role = document.getElementById('loginRole') ? document.getElementById('loginRole').value : 'pemancing';
     
-    if (role === 'admin') {
-        if (email !== 'admin@mancingyuk.com') {
-            showToast('Gunakan email admin@mancingyuk.com', 'error');
+    try {
+        showToast('Memproses login...', 'info');
+        const FB = await waitForFirebase();
+        
+        const cred = await FB.signInWithEmailAndPassword(FB.auth, email, password);
+        const user = cred.user;
+        
+        const profileRef = FB.doc(FB.db, 'users', user.uid);
+        const profileSnap = await FB.getDoc(profileRef);
+        
+        if (!profileSnap.exists()) {
+            await FB.signOut(FB.auth);
+            showToast('Profil tidak ditemukan. Hubungi admin.', 'error');
             return;
         }
-        currentUser = {
-            name: "Admin MancingYuk",
-            email: "admin@mancingyuk.com",
-            avatar: IMG.avatars.admin.local,
-            avatarFallback: IMG.avatars.admin.fallback,
-            level: "Super Admin", points: 0,
-            bio: "Pengelola aplikasi MancingYuk!",
-            joinDate: "Januari 2024", type: "admin"
-        };
-    } else if (role === 'owner') {
-        currentUser = {
-            name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Owner",
-            email: email,
-            avatar: IMG.avatars.owner.local,
-            avatarFallback: IMG.avatars.owner.fallback,
-            level: "Pemilik Pemancingan", points: 0,
-            bio: "Pemilik pemancingan",
-            joinDate: "Januari 2024", type: "owner"
-        };
-    } else {
-        const stored = safeLoad('registered_user', null);
-        if (stored && stored.email === email) currentUser = stored;
-        else {
-            currentUser = {
-                name: email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Pemancing",
-                email: email,
-                avatar: IMG.avatars.rizky.local,
-                avatarFallback: IMG.avatars.rizky.fallback,
-                level: "Pemancing Aktif", points: 1250,
-                bio: "Pecinta mancing sejati 🎣",
-                joinDate: "Januari 2024", type: "pemancing"
-            };
+        
+        const profile = profileSnap.data();
+        
+        if (profile.type !== role) {
+            await FB.signOut(FB.auth);
+            const roleLabels = { pemancing: 'Pemancing', owner: 'Pemilik Pemancingan', admin: 'Admin Applicator' };
+            showToast(`Anda terdaftar sebagai ${roleLabels[profile.type]}, bukan ${roleLabels[role]}`, 'error');
+            return;
         }
+        
+        currentUser = { ...profile, uid: user.uid, email: user.email };
+        save();
+        
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('authModal').classList.remove('flex');
+        showToast(`Selamat datang, ${currentUser.name}!`);
+        updateRoleUI();
+        switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
+        
+    } catch (err) {
+        console.error('Login error:', err);
+        let msg = 'Login gagal';
+        if (err.code === 'auth/user-not-found') msg = 'Email tidak terdaftar';
+        else if (err.code === 'auth/wrong-password') msg = 'Password salah';
+        else if (err.code === 'auth/invalid-email') msg = 'Email tidak valid';
+        else if (err.code === 'auth/invalid-credential') msg = 'Email atau password salah';
+        else if (err.code === 'auth/too-many-requests') msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
+        showToast(msg, 'error');
     }
-    save();
-    document.getElementById('authModal').classList.add('hidden');
-    document.getElementById('authModal').classList.remove('flex');
-    showToast('Selamat datang, ' + currentUser.name + '!');
-    updateRoleUI();
-    switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
 }
 
-function handleSignup(e) {
+// 🔥 FIREBASE SIGNUP
+async function handleSignup(e) {
     e.preventDefault();
     const name = document.getElementById('signupName').value;
     const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPass').value;
     const type = document.getElementById('signupType').value;
-    currentUser = {
-        name, email, type,
-        avatar: type === 'owner' ? IMG.avatars.owner.local : IMG.avatars.default.local,
-        avatarFallback: type === 'owner' ? IMG.avatars.owner.fallback : IMG.avatars.default.fallback,
-        level: type === 'owner' ? "Pemilik Pemancingan" : "Pemancing Baru",
-        points: 100, bio: "Baru bergabung di MancingYuk!",
-        joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
-        type: type
-    };
-    if (!registeredUsers.find(u => u.email === email)) {
-        registeredUsers.push({ name, email, type, joinDate: currentUser.joinDate });
+    
+    try {
+        showToast('Membuat akun...', 'info');
+        const FB = await waitForFirebase();
+        
+        const cred = await FB.createUserWithEmailAndPassword(FB.auth, email, password);
+        const user = cred.user;
+        
+        const profile = {
+            name: name,
+            email: email,
+            type: type,
+            avatar: '',
+            level: type === 'owner' ? 'Pemilik Pemancingan' : 'Pemancing Baru',
+            points: 100,
+            bio: 'Baru bergabung di MancingYuk!',
+            joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+            createdAt: FB.serverTimestamp()
+        };
+        
+        await FB.setDoc(FB.doc(FB.db, 'users', user.uid), profile);
+        
+        currentUser = { ...profile, uid: user.uid, email: user.email };
+        save();
+        
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('authModal').classList.remove('flex');
+        showToast('Akun berhasil dibuat!');
+        updateRoleUI();
+        switchTab('home');
+        
+    } catch (err) {
+        console.error('Signup error:', err);
+        let msg = 'Pendaftaran gagal';
+        if (err.code === 'auth/email-already-in-use') msg = 'Email sudah terdaftar. Silakan login.';
+        else if (err.code === 'auth/weak-password') msg = 'Password minimal 6 karakter';
+        else if (err.code === 'auth/invalid-email') msg = 'Format email tidak valid';
+        showToast(msg, 'error');
     }
-    save();
-    document.getElementById('authModal').classList.add('hidden');
-    document.getElementById('authModal').classList.remove('flex');
-    showToast('Akun berhasil dibuat!');
-    updateRoleUI();
-    switchTab('home');
 }
 
-function logout() {
+// 🔥 FIREBASE LOGOUT
+async function logout() {
     if (!confirm('Yakin ingin keluar?')) return;
-    currentUser = null; save();
-    document.getElementById('bottomNav').classList.remove('hidden');
-    document.getElementById('adminNav').classList.add('hidden');
-    openAuth();
-    showToast('Anda telah keluar', 'info');
+    
+    try {
+        const FB = await waitForFirebase();
+        await FB.signOut(FB.auth);
+        
+        currentUser = null;
+        save();
+        
+        document.getElementById('bottomNav').classList.remove('hidden');
+        document.getElementById('adminNav').classList.add('hidden');
+        openAuth();
+        showToast('Anda telah keluar', 'info');
+        
+    } catch (err) {
+        console.error('Logout error:', err);
+        showToast('Gagal keluar', 'error');
+    }
 }
 
-function adminLogout() {
+async function adminLogout() {
     if (!confirm('Keluar dari mode admin?')) return;
-    currentUser = null; save();
-    document.getElementById('bottomNav').classList.remove('hidden');
-    document.getElementById('adminNav').classList.add('hidden');
-    openAuth();
-    showToast('Anda telah keluar dari admin', 'info');
+    
+    try {
+        const FB = await waitForFirebase();
+        await FB.signOut(FB.auth);
+        
+        currentUser = null;
+        save();
+        
+        document.getElementById('bottomNav').classList.remove('hidden');
+        document.getElementById('adminNav').classList.add('hidden');
+        openAuth();
+        showToast('Anda telah keluar dari admin', 'info');
+        
+    } catch (err) {
+        console.error('Admin logout error:', err);
+        showToast('Gagal keluar', 'error');
+    }
 }
 
 function openAuth() {
@@ -467,7 +524,7 @@ function openAuth() {
 }
 
 // ==========================================
-// UPDATE ROLE UI (HANYA BOTTOM NAV, tanpa badge header)
+// UPDATE ROLE UI
 // ==========================================
 function updateRoleUI() {
     const bottomNav = document.getElementById('bottomNav');
@@ -1224,7 +1281,7 @@ function submitPost() {
 }
 
 // ==========================================
-// PROFILE (DENGAN ROLE BADGE)
+// PROFILE
 // ==========================================
 function renderProfile(container) {
     try {
@@ -1246,7 +1303,6 @@ function renderProfile(container) {
         const userAvatar = currentUser.avatar || IMG.avatars.default.local;
         const userAvatarFb = currentUser.avatarFallback || IMG.avatars.default.fallback;
         
-        // Role badge HTML
         const roleBadgeHtml = currentUser.type === 'admin'
             ? '<span class="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full font-bold">👑 ADMIN</span>'
             : currentUser.type === 'owner'
@@ -1319,7 +1375,7 @@ function renderProfile(container) {
                 </div>
                 <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-3.5 rounded-xl font-bold border border-red-100 mb-6">Keluar Akun</button>
                 <div class="text-center pb-4">
-                    <p class="text-xs text-gray-400">MancingYuk! v3.2.0</p>
+                    <p class="text-xs text-gray-400">MancingYuk! v3.3.0</p>
                     <p class="text-[10px] text-gray-300 mt-1">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
                 </div>
             </div>
@@ -1784,14 +1840,17 @@ function closeCheckout() {
     document.getElementById('checkoutModal').classList.add('hidden');
     document.getElementById('checkoutModal').classList.remove('flex');
 }
+
+// 🔥 PROCESS PAYMENT + SIMPAN KE FIRESTORE
 function processPayment() {
     const btn = document.getElementById('payBtn');
     btn.innerHTML = 'Memproses...';
     btn.disabled = true;
-    setTimeout(() => {
+    setTimeout(async () => {
         btn.innerHTML = 'Bayar Sekarang';
         btn.disabled = false;
         closeCheckout();
+        
         const finalTotal = bookingData.finalTotal || bookingData.total;
         const fmtDate = new Date(bookingData.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         const newTicket = {
@@ -1802,15 +1861,64 @@ function processPayment() {
             imageFallback: bookingData.spot.imageFallback, reviewed: false
         };
         userTickets.unshift(newTicket);
+        
         const spotRef = spots.find(s => s.id === bookingData.spot.id);
         if (spotRef) spotRef.slots = Math.max(0, spotRef.slots - bookingData.qty);
+        
         if (currentUser) {
             if (bookingData.pointsUsed > 0) currentUser.points -= bookingData.pointsUsed;
             currentUser.points += Math.floor(bookingData.total / 1000);
         }
+        
         notifications.unshift({ id: Date.now(), title: "Booking Berhasil", msg: "Tiket " + bookingData.spot.name + " aktif", time: "Baru saja", read: false });
-        ownerBookings.unshift({ id: 'B-' + Date.now(), customer: currentUser.name, spot: bookingData.spot.name, date: fmtDate, qty: bookingData.qty, total: finalTotal, status: "Pending" });
-        checkAchievements(); save(); updateNotifBadge();
+        
+        checkAchievements(); 
+        save(); 
+        updateNotifBadge();
+        
+        // 🔥 SIMPAN BOOKING & TIKET KE FIRESTORE
+        if (currentUser && currentUser.uid) {
+            try {
+                const FB = await waitForFirebase();
+                
+                await FB.addDoc(FB.collection(FB.db, 'bookings'), {
+                    userId: currentUser.uid,
+                    userName: currentUser.name,
+                    userEmail: currentUser.email,
+                    spotId: bookingData.spot.id,
+                    spotName: bookingData.spot.name,
+                    ownerId: bookingData.spot.ownerId || '',
+                    date: fmtDate,
+                    qty: bookingData.qty,
+                    total: finalTotal,
+                    status: 'Pending',
+                    createdAt: FB.serverTimestamp()
+                });
+                
+                await FB.addDoc(FB.collection(FB.db, 'tickets'), {
+                    userId: currentUser.uid,
+                    ticketId: newTicket.id,
+                    spotId: bookingData.spot.id,
+                    spotName: bookingData.spot.name,
+                    date: fmtDate,
+                    qty: bookingData.qty,
+                    total: finalTotal,
+                    status: 'Aktif',
+                    reviewed: false,
+                    createdAt: FB.serverTimestamp()
+                });
+                
+                // Update user points di Firestore
+                await FB.updateDoc(FB.doc(FB.db, 'users', currentUser.uid), {
+                    points: currentUser.points
+                });
+                
+                console.log('✅ Booking & ticket saved to Firestore');
+            } catch (fbErr) {
+                console.error('❌ Firestore save error:', fbErr);
+            }
+        }
+        
         document.getElementById('ticketDetails').innerHTML = `
             <div class="flex justify-between mb-1"><span>ID</span><span class="font-semibold text-dark">${newTicket.id}</span></div>
             <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${newTicket.spotName}</span></div>
@@ -1914,13 +2022,36 @@ function closeEditProfile() {
     document.getElementById('editProfileModal').classList.add('hidden');
     document.getElementById('editProfileModal').classList.remove('flex');
 }
-function saveProfile() {
-    currentUser.name = document.getElementById('editName').value;
-    currentUser.email = document.getElementById('editEmail').value;
-    currentUser.bio = document.getElementById('editBio').value;
-    save(); closeEditProfile();
-    showToast('Profil diperbarui');
-    renderProfile(document.getElementById('app-content'));
+
+// 🔥 SIMPAN PROFIL KE FIRESTORE
+async function saveProfile() {
+    const newName = document.getElementById('editName').value;
+    const newEmail = document.getElementById('editEmail').value;
+    const newBio = document.getElementById('editBio').value;
+    
+    try {
+        const FB = await waitForFirebase();
+        
+        if (currentUser && currentUser.uid) {
+            await FB.updateDoc(FB.doc(FB.db, 'users', currentUser.uid), {
+                name: newName,
+                email: newEmail,
+                bio: newBio
+            });
+        }
+        
+        currentUser.name = newName;
+        currentUser.email = newEmail;
+        currentUser.bio = newBio;
+        
+        save(); closeEditProfile();
+        showToast('Profil diperbarui');
+        renderProfile(document.getElementById('app-content'));
+        
+    } catch (err) {
+        console.error('Save profile error:', err);
+        showToast('Gagal update profil', 'error');
+    }
 }
 function openPassword() {
     document.getElementById('oldPass').value = '';
@@ -2014,10 +2145,44 @@ function buyMerch(id) {
 }
 
 // ==========================================
-// OWNER DASHBOARD
+// OWNER DASHBOARD - 🔥 LOAD DARI FIRESTORE
 // ==========================================
-function openOwnerDashboard() {
-    const mySpots = spots.filter(s => s.ownerId === "owner1");
+async function openOwnerDashboard() {
+    // 🔥 LOAD BOOKINGS DARI FIRESTORE
+    if (currentUser && currentUser.uid) {
+        try {
+            const FB = await waitForFirebase();
+            const q = FB.query(
+                FB.collection(FB.db, 'bookings'),
+                FB.where('ownerId', '==', currentUser.uid)
+            );
+            const snapshot = await FB.getDocs(q);
+            
+            const fbBookings = [];
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                fbBookings.push({
+                    id: docSnap.id,
+                    customer: data.userName,
+                    spot: data.spotName,
+                    date: data.date,
+                    qty: data.qty,
+                    total: data.total,
+                    status: data.status
+                });
+            });
+            
+            if (fbBookings.length > 0) {
+                ownerBookings = fbBookings;
+                save();
+                console.log('✅ Loaded', fbBookings.length, 'bookings from Firestore');
+            }
+        } catch (fbErr) {
+            console.error('Load bookings error:', fbErr);
+        }
+    }
+    
+    const mySpots = spots.filter(s => s.ownerId === currentUser.uid || s.ownerId === "owner1");
     const mySpot = mySpots[0] || spots[0];
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
     const platformFee = revenue * 0.08;
@@ -2026,14 +2191,18 @@ function openOwnerDashboard() {
     const pending = ownerBookings.filter(b => b.status === 'Pending').length;
     
     let bookingsHtml = '';
-    ownerBookings.forEach((b, i) => {
-        const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
-        const btn = b.status === 'Pending' ? '<button onclick="confirmBooking(' + i + ')" class="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded">Konfirmasi</button>' : '';
-        bookingsHtml += '<div class="bg-white border border-gray-100 rounded-xl p-3">';
-        bookingsHtml += '<div class="flex justify-between items-center mb-1"><p class="text-xs font-bold">' + b.customer + '</p><span class="text-[9px] ' + statusCls + ' px-2 py-0.5 rounded font-bold">' + b.status + '</span></div>';
-        bookingsHtml += '<p class="text-[10px] text-gray-500">' + b.date + ' • ' + b.qty + ' orang</p>';
-        bookingsHtml += '<div class="flex justify-between items-center mt-2"><p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>' + btn + '</div></div>';
-    });
+    if (ownerBookings.length === 0) {
+        bookingsHtml = '<p class="text-xs text-gray-400 text-center py-3">Belum ada booking</p>';
+    } else {
+        ownerBookings.forEach((b, i) => {
+            const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
+            const btn = b.status === 'Pending' ? '<button onclick="confirmBooking(' + i + ')" class="bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded">Konfirmasi</button>' : '';
+            bookingsHtml += '<div class="bg-white border border-gray-100 rounded-xl p-3">';
+            bookingsHtml += '<div class="flex justify-between items-center mb-1"><p class="text-xs font-bold">' + b.customer + '</p><span class="text-[9px] ' + statusCls + ' px-2 py-0.5 rounded font-bold">' + b.status + '</span></div>';
+            bookingsHtml += '<p class="text-[10px] text-gray-500">' + b.date + ' • ' + b.qty + ' orang</p>';
+            bookingsHtml += '<div class="flex justify-between items-center mt-2"><p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>' + btn + '</div></div>';
+        });
+    }
     
     let mySpotsHtml = '';
     mySpots.forEach(s => {
@@ -2096,9 +2265,23 @@ function closeOwner() {
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
-function confirmBooking(i) {
+
+// 🔥 CONFIRM BOOKING - UPDATE FIRESTORE
+async function confirmBooking(i) {
     ownerBookings[i].status = 'Confirmed';
-    save(); showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
+    
+    try {
+        const FB = await waitForFirebase();
+        const bookingId = ownerBookings[i].id;
+        if (bookingId && bookingId.length > 10) {
+            await FB.updateDoc(FB.doc(FB.db, 'bookings', bookingId), { status: 'Confirmed' });
+        }
+    } catch (err) {
+        console.error('Update booking error:', err);
+    }
+    
+    save(); 
+    showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
     closeOwner();
     setTimeout(() => openOwnerDashboard(), 400);
 }
@@ -2133,7 +2316,7 @@ function showPromo() {
 }
 
 // ==========================================
-// ADD SPOT (Owner)
+// ADD SPOT (Owner) - 🔥 SIMPAN KE FIRESTORE
 // ==========================================
 function openAddSpot() {
     closeOwner();
@@ -2210,7 +2393,9 @@ function closeAddSpot() {
         content.style.transform = '';
     }, 300);
 }
-function saveNewSpot() {
+
+// 🔥 SAVE NEW SPOT - SIMPAN KE FIRESTORE
+async function saveNewSpot() {
     const name = document.getElementById('newSpotName').value.trim();
     const city = document.getElementById('newSpotCity').value.trim();
     const fish = document.getElementById('newSpotFish').value.trim() || 'Lele';
@@ -2228,18 +2413,36 @@ function saveNewSpot() {
         return;
     }
     
-    const newId = Math.max(...spots.map(s => s.id)) + 1;
+    const newId = Math.max(...spots.map(s => s.id), 0) + 1;
     const newSpot = {
         id: newId, name, location: fish, city, price,
         rating: 5.0, reviews: 0, slots,
         image: img || getImgLocal('spots', ((newId - 1) % 6) + 1),
         imageFallback: img || getImgFallback('spots', ((newId - 1) % 6) + 1),
         facilities: facilities.length > 0 ? facilities : ["Parkir", "Toilet"],
-        description: desc, owner: currentUser ? currentUser.name : "Owner",
-        ownerId: "owner1", premium: false, distance: 5.0, open,
+        description: desc, 
+        owner: currentUser ? currentUser.name : "Owner",
+        ownerId: currentUser ? currentUser.uid : "owner1",
+        premium: false, distance: 5.0, open,
         lat, lng
     };
+    
     spots.push(newSpot);
+    
+    // 🔥 SIMPAN SPOT KE FIRESTORE
+    if (currentUser && currentUser.uid) {
+        try {
+            const FB = await waitForFirebase();
+            await FB.addDoc(FB.collection(FB.db, 'spots'), {
+                ...newSpot,
+                createdAt: FB.serverTimestamp()
+            });
+            console.log('✅ Spot saved to Firestore');
+        } catch (fbErr) {
+            console.error('Save spot error:', fbErr);
+        }
+    }
+    
     save();
     closeAddSpot();
     showToast('Spot "' + name + '" berhasil ditambahkan!');
@@ -2415,7 +2618,7 @@ function renderAdminUsers(container) {
         usersHtml += '<p class="text-xs font-bold text-dark truncate">' + u.name + '</p>';
         usersHtml += '<p class="text-[10px] text-gray-500 truncate">' + u.email + '</p>';
         usersHtml += '<div class="flex gap-1 mt-1"><span class="bg-' + typeColor + '-100 text-' + typeColor + '-700 text-[9px] px-1.5 py-0.5 rounded font-bold">' + typeLabel + '</span>';
-        usersHtml += '<span class="text-[9px] text-gray-400">' + u.joinDate + '</span></div>';
+        usersHtml += '<span class="text-[9px] text-gray-400">' + (u.joinDate || '-') + '</span></div>';
         usersHtml += '</div></div>';
     });
     
@@ -2426,7 +2629,7 @@ function renderAdminUsers(container) {
                 <span class="text-xs text-gray-500">${registeredUsers.length} user</span>
             </div>
         </div>
-        <div class="px-5 mt-4 pb-4">${usersHtml}</div>
+        <div class="px-5 mt-4 pb-4">${usersHtml || '<p class="text-center text-gray-400 text-sm py-10">Belum ada user terdaftar</p>'}</div>
     `;
 }
 
@@ -2498,26 +2701,79 @@ function fallbackCopy(text) {
 }
 
 // ==========================================
-// INIT
+// 🔥 INIT - AUTH STATE LISTENER
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('MancingYuk! v3.2 loaded - Role badge di Profil');
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('MancingYuk! v3.3 loaded - Firebase Edition');
     try {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
             document.getElementById('darkBtn').textContent = '☀️';
         }
         updateNotifBadge();
-        if (!onboardingDone) {
-            document.getElementById('onboardingModal').classList.remove('hidden');
-            document.getElementById('onboardingModal').classList.add('flex');
-            renderOnboarding();
-        } else if (!currentUser) {
-            openAuth();
-        } else {
-            updateRoleUI();
-            switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
-        }
+        
+        // Tunggu Firebase siap
+        const FB = await waitForFirebase();
+        console.log('🔥 Firebase ready, setting up auth listener...');
+        
+        // AUTH STATE LISTENER
+        FB.onAuthStateChanged(FB.auth, async (user) => {
+            if (user) {
+                try {
+                    const profileRef = FB.doc(FB.db, 'users', user.uid);
+                    const profileSnap = await FB.getDoc(profileRef);
+                    
+                    if (profileSnap.exists()) {
+                        currentUser = { ...profileSnap.data(), uid: user.uid, email: user.email };
+                        save();
+                        updateRoleUI();
+                        
+                        document.getElementById('onboardingModal').classList.add('hidden');
+                        document.getElementById('authModal').classList.add('hidden');
+                        document.getElementById('authModal').classList.remove('flex');
+                        
+                        switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
+                        console.log('✅ User restored:', currentUser.name, '(', currentUser.type, ')');
+                        
+                        // Load registered users untuk admin
+                        if (currentUser.type === 'admin') {
+                            try {
+                                const usersSnap = await FB.getDocs(FB.collection(FB.db, 'users'));
+                                registeredUsers = [];
+                                usersSnap.forEach(d => {
+                                    const data = d.data();
+                                    registeredUsers.push({
+                                        name: data.name,
+                                        email: data.email,
+                                        type: data.type,
+                                        joinDate: data.joinDate || '-'
+                                    });
+                                });
+                                save();
+                            } catch (e) { console.warn('Load users error:', e); }
+                        }
+                    } else {
+                        console.warn('Profile not found, signing out');
+                        await FB.signOut(FB.auth);
+                    }
+                } catch (err) {
+                    console.error('Load profile error:', err);
+                    openAuth();
+                }
+            } else {
+                currentUser = null;
+                save();
+                
+                if (!onboardingDone) {
+                    document.getElementById('onboardingModal').classList.remove('hidden');
+                    document.getElementById('onboardingModal').classList.add('flex');
+                    renderOnboarding();
+                } else {
+                    openAuth();
+                }
+            }
+        });
+        
     } catch (err) {
         console.error('Init error:', err);
         document.getElementById('app-content').innerHTML = '<div class="p-5 text-red-500 text-sm">Init Error: ' + err.message + '</div>';
