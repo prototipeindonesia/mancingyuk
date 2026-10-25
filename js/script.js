@@ -1,16 +1,12 @@
-// ==========================================
-// MancingYuk! v3.3 - Firebase Edition
-// ==========================================
+// MancingYuk!
 
 // Reset corrupt storage
 try {
     const keys = ['my_user','my_tickets','my_notifs','my_events','my_posts','owner_bookings','my_catches','chat_history','my_spots','my_admin','registered_users','my_achievements'];
     keys.forEach(k => { const v = localStorage.getItem(k); if (v) JSON.parse(v); });
-} catch (e) { console.warn('Storage corrupt, reset'); localStorage.clear(); }
+} catch (e) { console.warn('[storage] corrupt, reset'); localStorage.clear(); }
 
-// ==========================================
-// 🔥 FIREBASE HELPER - Tunggu Firebase Siap
-// ==========================================
+// tunggu firebase siap
 function waitForFirebase() {
     return new Promise((resolve) => {
         const check = () => {
@@ -24,9 +20,7 @@ function waitForFirebase() {
     });
 }
 
-// ==========================================
-// HELPER GAMBAR
-// ==========================================
+// gambar
 const IMG = {
     spots: {
         1: { local: "assets/spots/spot-1-pak-budi.jpg", fallback: "https://images.unsplash.com/photo-1594913251120-2c9c8a6b4e9f?auto=format&fit=crop&w=800&q=80" },
@@ -109,19 +103,40 @@ const IMG = {
 function imgTag(src, fallback, alt, className) {
     return '<img src="' + src + '" data-fallback="' + fallback + '" alt="' + (alt || '') + '" class="' + (className || '') + '" onerror="handleImgError(this)">';
 }
+
 window.handleImgError = function(img) {
-    if (img.dataset.fallback && img.src !== img.dataset.fallback) {
-        img.src = img.dataset.fallback;
+    const placeholder = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">' +
+        '<rect fill="#e5e7eb" width="400" height="200"/>' +
+        '<text x="50%" y="50%" fill="#9ca3af" text-anchor="middle" ' +
+        'font-family="sans-serif" font-size="14" dy=".3em">Gambar tidak tersedia</text></svg>'
+    );
+    if (img.dataset.imgTried === '1') {
+        img.onerror = null;
+        img.src = placeholder;
+        return;
+    }
+    const fb = img.dataset.fallback;
+    if (fb && img.src !== fb) {
+        img.dataset.imgTried = '1';
+        img.src = fb;
     } else {
-        img.src = "https://via.placeholder.com/400x200?text=No+Image";
+        img.dataset.imgTried = '1';
+        img.onerror = null;
+        img.src = placeholder;
     }
 };
-function getImgLocal(cat, key) { const i = IMG[cat] && IMG[cat][key]; return i ? i.local : ''; }
-function getImgFallback(cat, key) { const i = IMG[cat] && IMG[cat][key]; return i ? i.fallback : 'https://via.placeholder.com/400x200'; }
 
-// ==========================================
-// DATA SPOT dengan KOORDINAT
-// ==========================================
+function getImgLocal(cat, key) { const i = IMG[cat] && IMG[cat][key]; return i ? i.local : ''; }
+function getImgFallback(cat, key) {
+    const i = IMG[cat] && IMG[cat][key];
+    if (i) return i.fallback;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect fill="#e5e7eb" width="400" height="200"/></svg>'
+    );
+}
+
+// spot default
 const DEFAULT_SPOTS = [
     { id: 1, name: "Pemancingan Pak Budi", location: "Lele, Nila, Mas", city: "Jakarta Selatan", price: 50000, rating: 4.7, reviews: 120, slots: 20, image: getImgLocal('spots',1), imageFallback: getImgFallback('spots',1), facilities: ["Saung","Parkir Luas","Kantin","Sewa Alat","Toilet"], description: "Pemancingan nyaman dengan suasana pedesaan.", owner: "Pak Budi", ownerId: "owner1", premium: true, distance: 2.3, open: "06:00 - 22:00", lat: -6.2615, lng: 106.8106 },
     { id: 2, name: "Kolam Mancing Sejahtera", location: "Gurame, Patin", city: "Depok", price: 75000, rating: 4.5, reviews: 85, slots: 15, image: getImgLocal('spots',2), imageFallback: getImgFallback('spots',2), facilities: ["AC Room","Mushola","WiFi","Resto"], description: "Pemancingan premium dengan fasilitas lengkap.", owner: "Haji Sejahtera", ownerId: "owner2", premium: true, distance: 8.5, open: "07:00 - 21:00", lat: -6.4025, lng: 106.7942 },
@@ -131,9 +146,7 @@ const DEFAULT_SPOTS = [
     { id: 6, name: "Sungai Citarum Fishing", location: "Baung, Mujair", city: "Karawang", price: 25000, rating: 4.3, reviews: 45, slots: 30, image: getImgLocal('spots',6), imageFallback: getImgFallback('spots',6), facilities: ["Area Piknik","Mushola"], description: "Mancing di tepi sungai dengan pemandangan indah.", owner: "Kang Ujang", ownerId: "owner6", premium: false, distance: 45, open: "05:00 - 18:00", lat: -6.3015, lng: 107.3061 }
 ];
 
-// ==========================================
-// TOKO PARTNER dengan PRODUK
-// ==========================================
+// toko partner
 const PARTNERS = [
     { id: 1, name: "Toko Pancing Jaya", category: "Alat Pancing", discount: "Diskon 15%", logo: "🎣", desc: "Alat pancing lengkap", phone: "0812-1111-1111", image: getImgLocal('partners', 'logo-1'), imageFallback: getImgFallback('partners', 'logo-1'),
       products: [
@@ -160,9 +173,7 @@ const PARTNERS = [
       ]}
 ];
 
-// ==========================================
-// DATA LAINNYA
-// ==========================================
+// data tambahan
 const EVENTS_DATA = [
     { id: 1, title: "Turnamen Mancing Lele", spotId: 1, date: "15 Nov 2024", time: "06:00 - 12:00", fee: 50000, prize: "Rp 5.000.000", participants: 45, maxParticipants: 100, status: "upcoming", image: getImgLocal('events',1), imageFallback: getImgFallback('events',1), desc: "Turnamen mancing lele dengan hadiah utama Rp 5 juta." },
     { id: 2, title: "Lomba Mancing Gurame", spotId: 2, date: "20 Nov 2024", time: "07:00 - 14:00", fee: 75000, prize: "Rp 3.000.000", participants: 28, maxParticipants: 50, status: "upcoming", image: getImgLocal('events',2), imageFallback: getImgFallback('events',2), desc: "Lomba mancing gurame jumbo." },
@@ -230,9 +241,7 @@ const WEATHER_FORECAST = {
     day3: { temp: 30, condition: "Cerah", icon: "☀️", humidity: 65, wind: "5 km/h", score: 92 }
 };
 
-// ==========================================
-// STATE
-// ==========================================
+// state
 function safeLoad(key, fallback) {
     try { const r = localStorage.getItem(key); if (!r) return fallback; return JSON.parse(r) || fallback; }
     catch (e) { return fallback; }
@@ -287,12 +296,10 @@ function save() {
         localStorage.setItem('my_spots', JSON.stringify(spots));
         localStorage.setItem('my_achievements', JSON.stringify(achievements));
         localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
-    } catch (e) { console.warn('Save error', e); }
+    } catch (e) { console.warn('[storage] save failed', e); }
 }
 
-// ==========================================
-// TOAST
-// ==========================================
+// toast
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
@@ -309,9 +316,7 @@ function showToast(message, type = 'success') {
     }, 2500);
 }
 
-// ==========================================
-// DARK MODE
-// ==========================================
+// dark mode
 function toggleDarkMode() {
     isDarkMode = !isDarkMode;
     document.body.classList.toggle('dark-mode', isDarkMode);
@@ -320,9 +325,7 @@ function toggleDarkMode() {
     showToast(isDarkMode ? 'Dark mode aktif' : 'Light mode aktif', 'info');
 }
 
-// ==========================================
-// ONBOARDING
-// ==========================================
+// onboarding
 function renderOnboarding() {
     const slides = [
         { icon: "🎣", title: "Selamat Datang di MancingYuk!", desc: "Platform untuk membuat lebih banyak orang mancing. Cari spot, ajak teman, booking, mancing!", bg: "from-primary to-blue-400" },
@@ -357,9 +360,7 @@ function finishOnboarding() {
     if (!currentUser) openAuth(); else switchTab('home');
 }
 
-// ==========================================
-// AUTH dengan 3 ROLE + FIREBASE
-// ==========================================
+// auth
 function toggleAuth(type) {
     const bL = document.getElementById('btn-login'), bS = document.getElementById('btn-signup');
     const fL = document.getElementById('loginForm'), fS = document.getElementById('signupForm');
@@ -374,49 +375,48 @@ function toggleAuth(type) {
     }
 }
 
-// 🔥 FIREBASE LOGIN
 async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPass').value;
     const role = document.getElementById('loginRole') ? document.getElementById('loginRole').value : 'pemancing';
-    
+
     try {
         showToast('Memproses login...', 'info');
         const FB = await waitForFirebase();
-        
+
         const cred = await FB.signInWithEmailAndPassword(FB.auth, email, password);
         const user = cred.user;
-        
+
         const profileRef = FB.doc(FB.db, 'users', user.uid);
         const profileSnap = await FB.getDoc(profileRef);
-        
+
         if (!profileSnap.exists()) {
             await FB.signOut(FB.auth);
             showToast('Profil tidak ditemukan. Hubungi admin.', 'error');
             return;
         }
-        
+
         const profile = profileSnap.data();
-        
+
         if (profile.type !== role) {
             await FB.signOut(FB.auth);
-            const roleLabels = { pemancing: 'Pemancing', owner: 'Pemilik Pemancingan', admin: 'Admin Applicator' };
+            const roleLabels = { pemancing: 'Pemancing', owner: 'Pemilik Pemancingan', admin: 'Admin Platform' };
             showToast(`Anda terdaftar sebagai ${roleLabels[profile.type]}, bukan ${roleLabels[role]}`, 'error');
             return;
         }
-        
+
         currentUser = { ...profile, uid: user.uid, email: user.email };
         save();
-        
+
         document.getElementById('authModal').classList.add('hidden');
         document.getElementById('authModal').classList.remove('flex');
         showToast(`Selamat datang, ${currentUser.name}!`);
         updateRoleUI();
         switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
-        
+
     } catch (err) {
-        console.error('Login error:', err);
+        console.error('[auth] login failed:', err);
         let msg = 'Login gagal';
         if (err.code === 'auth/user-not-found') msg = 'Email tidak terdaftar';
         else if (err.code === 'auth/wrong-password') msg = 'Password salah';
@@ -427,21 +427,20 @@ async function handleLogin(e) {
     }
 }
 
-// 🔥 FIREBASE SIGNUP
 async function handleSignup(e) {
     e.preventDefault();
     const name = document.getElementById('signupName').value;
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPass').value;
     const type = document.getElementById('signupType').value;
-    
+
     try {
         showToast('Membuat akun...', 'info');
         const FB = await waitForFirebase();
-        
+
         const cred = await FB.createUserWithEmailAndPassword(FB.auth, email, password);
         const user = cred.user;
-        
+
         const profile = {
             name: name,
             email: email,
@@ -453,20 +452,20 @@ async function handleSignup(e) {
             joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
             createdAt: FB.serverTimestamp()
         };
-        
+
         await FB.setDoc(FB.doc(FB.db, 'users', user.uid), profile);
-        
+
         currentUser = { ...profile, uid: user.uid, email: user.email };
         save();
-        
+
         document.getElementById('authModal').classList.add('hidden');
         document.getElementById('authModal').classList.remove('flex');
         showToast('Akun berhasil dibuat!');
         updateRoleUI();
         switchTab('home');
-        
+
     } catch (err) {
-        console.error('Signup error:', err);
+        console.error('[auth] signup failed:', err);
         let msg = 'Pendaftaran gagal';
         if (err.code === 'auth/email-already-in-use') msg = 'Email sudah terdaftar. Silakan login.';
         else if (err.code === 'auth/weak-password') msg = 'Password minimal 6 karakter';
@@ -475,45 +474,44 @@ async function handleSignup(e) {
     }
 }
 
-// 🔥 FIREBASE LOGOUT
 async function logout() {
     if (!confirm('Yakin ingin keluar?')) return;
-    
+
     try {
         const FB = await waitForFirebase();
         await FB.signOut(FB.auth);
-        
+
         currentUser = null;
         save();
-        
+
         document.getElementById('bottomNav').classList.remove('hidden');
         document.getElementById('adminNav').classList.add('hidden');
         openAuth();
         showToast('Anda telah keluar', 'info');
-        
+
     } catch (err) {
-        console.error('Logout error:', err);
+        console.error('[auth] logout failed:', err);
         showToast('Gagal keluar', 'error');
     }
 }
 
 async function adminLogout() {
     if (!confirm('Keluar dari mode admin?')) return;
-    
+
     try {
         const FB = await waitForFirebase();
         await FB.signOut(FB.auth);
-        
+
         currentUser = null;
         save();
-        
+
         document.getElementById('bottomNav').classList.remove('hidden');
         document.getElementById('adminNav').classList.add('hidden');
         openAuth();
         showToast('Anda telah keluar dari admin', 'info');
-        
+
     } catch (err) {
-        console.error('Admin logout error:', err);
+        console.error('[auth] admin logout failed:', err);
         showToast('Gagal keluar', 'error');
     }
 }
@@ -523,19 +521,17 @@ function openAuth() {
     m.classList.remove('hidden'); m.classList.add('flex');
 }
 
-// ==========================================
-// UPDATE ROLE UI
-// ==========================================
+// role ui
 function updateRoleUI() {
     const bottomNav = document.getElementById('bottomNav');
     const adminNav = document.getElementById('adminNav');
-    
+
     if (!currentUser) {
         bottomNav.classList.remove('hidden');
         adminNav.classList.add('hidden');
         return;
     }
-    
+
     if (currentUser.type === 'admin') {
         bottomNav.classList.add('hidden');
         adminNav.classList.remove('hidden');
@@ -545,9 +541,7 @@ function updateRoleUI() {
     }
 }
 
-// ==========================================
-// TAB SWITCHER
-// ==========================================
+// tab switcher
 function switchTab(tabName) {
     try {
         ['home','explore','events','community','profile'].forEach(tab => {
@@ -564,10 +558,10 @@ function switchTab(tabName) {
             const svg = btn.querySelector('svg');
             if (svg) { svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); }
         });
-        
+
         const content = document.getElementById('app-content');
         if (!content) return;
-        
+
         if (tabName.startsWith('admin-')) {
             const subtab = tabName.replace('admin-','');
             const activeBtn = document.getElementById('anav-' + subtab);
@@ -583,7 +577,7 @@ function switchTab(tabName) {
             content.scrollTop = 0;
             return;
         }
-        
+
         const activeBtn = document.getElementById('nav-' + tabName);
         if (activeBtn) {
             activeBtn.className = "flex flex-col items-center text-primary";
@@ -597,14 +591,12 @@ function switchTab(tabName) {
         else if (tabName === 'profile') renderProfile(content);
         content.scrollTop = 0;
     } catch (err) {
-        console.error('switchTab error:', err);
+        console.error('[tab] switch failed:', err);
         document.getElementById('app-content').innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
 
-// ==========================================
-// HOME
-// ==========================================
+// home
 function renderHome(container) {
     try {
         const premiumSpots = spots.filter(s => s.premium).slice(0, 3);
@@ -790,7 +782,7 @@ function renderHome(container) {
         `;
         renderSpots(getFilteredSpots().slice(0, 4));
     } catch (err) {
-        console.error('renderHome error:', err);
+        console.error('[home] render failed:', err);
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
@@ -819,9 +811,7 @@ function getFilteredSpots() {
     return filtered;
 }
 
-// ==========================================
-// SPOT CARDS
-// ==========================================
+// spot cards
 function renderSpots(data) {
     const container = document.getElementById('spotContainer');
     if (!container) return;
@@ -856,9 +846,7 @@ function renderSpots(data) {
     container.innerHTML = html;
 }
 
-// ==========================================
-// EXPLORE
-// ==========================================
+// explore
 function renderExplore(container) {
     try {
         const cats = ['all', 'Lele', 'Nila', 'Gurame', 'Bawal', 'Mas'];
@@ -902,7 +890,7 @@ function renderExplore(container) {
         if (el) el.textContent = filtered.length + ' spot ditemukan';
         renderSpots(filtered);
     } catch (err) {
-        console.error('renderExplore error:', err);
+        console.error('[explore] render failed:', err);
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
@@ -914,22 +902,20 @@ function filterCategory(cat) {
 }
 function setSort(sort) { currentSort = sort; renderExplore(document.getElementById('app-content')); }
 
-// ==========================================
-// MAP (Leaflet)
-// ==========================================
+// map
 function openMap(spotId) {
     spotId = spotId || null;
     const modal = document.getElementById('mapModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.getElementById('mapTitle').textContent = spotId ? 'Lokasi Spot' : 'Peta Spot Mancing';
-    
+
     if (leafletMap) {
         leafletMap.remove();
         leafletMap = null;
         mapMarkers = [];
     }
-    
+
     setTimeout(() => {
         let center = [-6.2088, 106.8456];
         let zoom = 10;
@@ -945,13 +931,13 @@ function openMap(spotId) {
                 zoom = 9;
             }
         }
-        
+
         leafletMap = L.map('mapContainer').setView(center, zoom);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap',
             maxZoom: 19
         }).addTo(leafletMap);
-        
+
         const toShow = spotId ? spots.filter(s => s.id === spotId) : spots;
         toShow.forEach(s => {
             if (s.lat && s.lng) {
@@ -968,7 +954,7 @@ function openMap(spotId) {
                 mapMarkers.push(marker);
             }
         });
-        
+
         setTimeout(() => leafletMap.invalidateSize(), 200);
     }, 150);
 }
@@ -982,9 +968,7 @@ function closeMap() {
     if (leafletMap) { leafletMap.remove(); leafletMap = null; mapMarkers = []; }
 }
 
-// ==========================================
-// PARTNER DETAIL
-// ==========================================
+// partner detail
 function showAllPartners() {
     const modal = document.getElementById('partnerModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1060,9 +1044,7 @@ function closePartner() {
     setTimeout(() => m.classList.add('hidden'), 300);
 }
 
-// ==========================================
-// TICKETS PAGE
-// ==========================================
+// tickets page
 function openTicketsPage() {
     const page = document.getElementById('ticketsPage');
     page.classList.remove('hidden');
@@ -1077,17 +1059,17 @@ function closeTicketsPage() {
 function renderTicketsPage() {
     const container = document.getElementById('ticketsPageContent');
     if (!container) return;
-    
+
     if (!currentUser) {
         container.innerHTML = '<div class="text-center py-10"><p class="text-gray-500 mb-4">Login untuk melihat tiket</p><button onclick="closeTicketsPage();openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
         return;
     }
-    
+
     if (userTickets.length === 0) {
         container.innerHTML = '<div class="flex flex-col items-center pt-10"><div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-400 text-sm mb-4">Belum ada tiket</p><button onclick="closeTicketsPage();switchTab(\'explore\')" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm">Cari Spot</button></div>';
         return;
     }
-    
+
     let html = '<p class="text-xs text-gray-500 mb-3">' + userTickets.length + ' tiket ditemukan</p>';
     userTickets.forEach((t, i) => {
         const statusColor = t.status === 'Selesai' ? 'green' : t.status === 'Dibatalkan' ? 'red' : 'blue';
@@ -1095,7 +1077,7 @@ function renderTicketsPage() {
         if (t.status === 'Selesai' && !t.reviewed) actionBtn = '<button onclick="closeTicketsPage();openReviewFor(' + i + ')" class="flex-1 bg-accent text-white py-2 rounded-xl text-xs font-bold">Review</button>';
         else if (t.status === 'Aktif') actionBtn = '<button onclick="cancelTicket(' + i + ');renderTicketsPage()" class="flex-1 bg-red-100 text-red-600 py-2 rounded-xl text-xs font-bold">Batalkan</button>';
         else if (t.reviewed) actionBtn = '<button class="flex-1 bg-green-100 text-green-600 py-2 rounded-xl text-xs font-bold" disabled>✓ Reviewed</button>';
-        
+
         html += '<div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-4">';
         html += '<div class="flex justify-between items-center border-b pb-3 mb-3"><span class="font-bold text-primary text-sm">' + t.spotName + '</span><span class="bg-' + statusColor + '-100 text-' + statusColor + '-700 text-[10px] px-2 py-1 rounded font-bold">' + t.status + '</span></div>';
         html += '<div class="flex justify-between text-xs text-gray-500 mb-1"><span>ID</span><span class="font-semibold text-dark">' + t.id + '</span></div>';
@@ -1107,9 +1089,7 @@ function renderTicketsPage() {
     container.innerHTML = html;
 }
 
-// ==========================================
-// EVENTS
-// ==========================================
+// events
 function renderEvents(container) {
     try {
         const tabs = [
@@ -1145,7 +1125,7 @@ function renderEvents(container) {
         });
         container.innerHTML = '<div class="px-5 pt-4 pb-3 bg-white"><h2 class="text-lg font-bold mb-3">Events & Turnamen</h2><div class="flex bg-gray-100 p-1 rounded-xl">' + tabsHtml + '</div></div><div class="px-5 mt-4 pb-4 space-y-4">' + eventsHtml + '</div>';
     } catch (err) {
-        console.error('renderEvents error:', err);
+        console.error('[events] render failed:', err);
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
@@ -1206,9 +1186,7 @@ function shareEvent(id) {
     else fallbackCopy(text);
 }
 
-// ==========================================
-// COMMUNITY
-// ==========================================
+// community
 function renderCommunity(container) {
     try {
         if (!currentUser) {
@@ -1236,7 +1214,7 @@ function renderCommunity(container) {
         });
         container.innerHTML = '<div class="px-5 pt-4 pb-3 bg-white flex justify-between items-center"><div><h2 class="text-lg font-bold">Komunitas</h2><p class="text-xs text-gray-500 mt-0.5">' + allPosts.length + ' postingan</p></div><button onclick="openPostModal()" class="bg-primary text-white px-4 py-2 rounded-full text-xs font-bold">+ Post</button></div><div class="px-5 mt-4 space-y-4 pb-4">' + postsHtml + '</div>';
     } catch (err) {
-        console.error('renderCommunity error:', err);
+        console.error('[community] render failed:', err);
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
@@ -1280,16 +1258,13 @@ function submitPost() {
     renderCommunity(document.getElementById('app-content'));
 }
 
-// ==========================================
-// PROFILE
-// ==========================================
+// profile
 function renderProfile(container) {
     try {
         if (!currentUser) {
             container.innerHTML = '<div class="flex flex-col items-center justify-center h-full pt-20 px-8 text-center"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-3xl">👤</div><p class="text-gray-500 mb-4 text-sm">Login untuk melihat profil</p><button onclick="openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
             return;
         }
-        const totalSpent = userTickets.filter(t => t.status !== 'Dibatalkan').reduce((s, t) => s + t.total, 0);
         const totalTrips = userTickets.filter(t => t.status === 'Selesai').length;
         const totalCatches = userCatches.length;
         const totalWeight = userCatches.reduce((s, c) => s + c.weight, 0);
@@ -1302,7 +1277,7 @@ function renderProfile(container) {
             : '';
         const userAvatar = currentUser.avatar || IMG.avatars.default.local;
         const userAvatarFb = currentUser.avatarFallback || IMG.avatars.default.fallback;
-        
+
         const roleBadgeHtml = currentUser.type === 'admin'
             ? '<span class="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full font-bold">👑 ADMIN</span>'
             : currentUser.type === 'owner'
@@ -1375,20 +1350,18 @@ function renderProfile(container) {
                 </div>
                 <button onclick="logout()" class="w-full bg-red-50 text-red-600 py-3.5 rounded-xl font-bold border border-red-100 mb-6">Keluar Akun</button>
                 <div class="text-center pb-4">
-                    <p class="text-xs text-gray-400">MancingYuk! v3.3.0</p>
+                    <p class="text-xs text-gray-400">MancingYuk! v1.0.0</p>
                     <p class="text-[10px] text-gray-300 mt-1">Lebih Banyak Spot. Lebih Banyak Teman. Lebih Banyak Cerita.</p>
                 </div>
             </div>
         `;
     } catch (err) {
-        console.error('renderProfile error:', err);
+        console.error('[profile] render failed:', err);
         container.innerHTML = '<div class="p-5 text-red-500 text-sm">Error: ' + err.message + '</div>';
     }
 }
 
-// ==========================================
-// FISH GUIDE
-// ==========================================
+// panduan ikan
 function openFishGuide() {
     const modal = document.getElementById('notifModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1427,6 +1400,8 @@ function openFishDetail(i) {
         <button onclick="openFishGuide()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
+
+// tips
 function openTips() {
     const modal = document.getElementById('notifModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1459,6 +1434,8 @@ function openTipDetail(i) {
         <button onclick="openTips()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
+
+// resep
 function openRecipes() {
     const modal = document.getElementById('notifModal');
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
@@ -1495,6 +1472,8 @@ function openRecipeDetail(i) {
         <button onclick="openRecipes()" class="w-full bg-primary text-white py-3 rounded-xl font-bold">Kembali</button>
     `;
 }
+
+// catatan tangkapan
 function openCatchLog() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('catchLogModal');
@@ -1560,6 +1539,8 @@ function saveCatch() {
     showToast('Tangkapan dicatat! +100 poin');
     openCatchLog();
 }
+
+// achievements
 function openAchievements() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('notifModal');
@@ -1580,6 +1561,7 @@ function openAchievements() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
+
 function checkAchievements() {
     if (!currentUser) return;
     let changed = false;
@@ -1593,6 +1575,8 @@ function checkAchievements() {
     if (!achievements[7].unlocked && currentUser.points >= 5000) { achievements[7].unlocked = true; currentUser.points += achievements[7].points; changed = true; }
     if (changed) save();
 }
+
+// leaderboard
 function openLeaderboard() {
     const modal = document.getElementById('notifModal');
     const board = [...LEADERBOARD];
@@ -1621,6 +1605,7 @@ function openLeaderboard() {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.add('show'), 10);
 }
+
 function renderTickets(container) {
     if (!currentUser) {
         container.innerHTML = '<div class="flex flex-col items-center justify-center h-full pt-20 px-8 text-center"><div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-3xl">🎫</div><p class="text-gray-500 mb-4 text-sm">Login untuk melihat tiket</p><button onclick="openAuth()" class="bg-primary text-white px-6 py-2.5 rounded-xl font-bold">Login</button></div>';
@@ -1680,9 +1665,7 @@ function cancelTicket(index) {
     else renderTickets(document.getElementById('app-content'));
 }
 
-// ==========================================
-// DETAIL SPOT
-// ==========================================
+// detail spot
 function openDetail(id) {
     if (!currentUser) return openAuth();
     selectedSpot = spots.find(s => s.id === id);
@@ -1752,6 +1735,8 @@ function shareSpot(id) {
     if (navigator.share) navigator.share({ title: s.name, text }).catch(() => fallbackCopy(text));
     else fallbackCopy(text);
 }
+
+// chat
 function openChat(spotId, ownerName) {
     currentChatOwner = ownerName;
     document.getElementById('chatTitle').innerText = ownerName;
@@ -1802,6 +1787,8 @@ function closeChat() {
     document.getElementById('chatModal').classList.add('hidden');
     document.getElementById('chatModal').classList.remove('flex');
 }
+
+// checkout
 function openCheckout() {
     const date = document.getElementById('bookingDate').value;
     const qty = parseInt(document.getElementById('qtyInput').value);
@@ -1841,7 +1828,7 @@ function closeCheckout() {
     document.getElementById('checkoutModal').classList.remove('flex');
 }
 
-// 🔥 PROCESS PAYMENT + SIMPAN KE FIRESTORE
+// proses pembayaran, simpan booking & tiket
 function processPayment() {
     const btn = document.getElementById('payBtn');
     btn.innerHTML = 'Memproses...';
@@ -1850,7 +1837,7 @@ function processPayment() {
         btn.innerHTML = 'Bayar Sekarang';
         btn.disabled = false;
         closeCheckout();
-        
+
         const finalTotal = bookingData.finalTotal || bookingData.total;
         const fmtDate = new Date(bookingData.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         const newTicket = {
@@ -1861,26 +1848,25 @@ function processPayment() {
             imageFallback: bookingData.spot.imageFallback, reviewed: false
         };
         userTickets.unshift(newTicket);
-        
+
         const spotRef = spots.find(s => s.id === bookingData.spot.id);
         if (spotRef) spotRef.slots = Math.max(0, spotRef.slots - bookingData.qty);
-        
+
         if (currentUser) {
             if (bookingData.pointsUsed > 0) currentUser.points -= bookingData.pointsUsed;
             currentUser.points += Math.floor(bookingData.total / 1000);
         }
-        
+
         notifications.unshift({ id: Date.now(), title: "Booking Berhasil", msg: "Tiket " + bookingData.spot.name + " aktif", time: "Baru saja", read: false });
-        
-        checkAchievements(); 
-        save(); 
+
+        checkAchievements();
+        save();
         updateNotifBadge();
-        
-        // 🔥 SIMPAN BOOKING & TIKET KE FIRESTORE
+
         if (currentUser && currentUser.uid) {
             try {
                 const FB = await waitForFirebase();
-                
+
                 await FB.addDoc(FB.collection(FB.db, 'bookings'), {
                     userId: currentUser.uid,
                     userName: currentUser.name,
@@ -1894,7 +1880,7 @@ function processPayment() {
                     status: 'Pending',
                     createdAt: FB.serverTimestamp()
                 });
-                
+
                 await FB.addDoc(FB.collection(FB.db, 'tickets'), {
                     userId: currentUser.uid,
                     ticketId: newTicket.id,
@@ -1907,18 +1893,17 @@ function processPayment() {
                     reviewed: false,
                     createdAt: FB.serverTimestamp()
                 });
-                
-                // Update user points di Firestore
+
                 await FB.updateDoc(FB.doc(FB.db, 'users', currentUser.uid), {
                     points: currentUser.points
                 });
-                
-                console.log('✅ Booking & ticket saved to Firestore');
+
+                console.log('[booking] saved');
             } catch (fbErr) {
-                console.error('❌ Firestore save error:', fbErr);
+                console.error('[booking] save failed:', fbErr);
             }
         }
-        
+
         document.getElementById('ticketDetails').innerHTML = `
             <div class="flex justify-between mb-1"><span>ID</span><span class="font-semibold text-dark">${newTicket.id}</span></div>
             <div class="flex justify-between mb-1"><span>Spot</span><span class="font-semibold text-dark">${newTicket.spotName}</span></div>
@@ -1942,6 +1927,8 @@ function closeSuccess(toHome) {
     if (toHome) switchTab('home');
     else openTicketsPage();
 }
+
+// review
 function openReviewFor(index) {
     reviewIndex = index; tempRating = 5; updateStars();
     document.getElementById('reviewText').value = '';
@@ -1968,6 +1955,8 @@ function submitReview() {
     showToast('Review ' + tempRating + '★ terkirim! +50 poin');
     renderTicketsPage();
 }
+
+// notifikasi
 function openNotifications() {
     if (!currentUser) return openAuth();
     const modal = document.getElementById('notifModal');
@@ -2011,6 +2000,8 @@ function closeNotif() {
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
 }
+
+// edit profil
 function openEditProfile() {
     document.getElementById('editName').value = currentUser.name;
     document.getElementById('editEmail').value = currentUser.email;
@@ -2022,16 +2013,14 @@ function closeEditProfile() {
     document.getElementById('editProfileModal').classList.add('hidden');
     document.getElementById('editProfileModal').classList.remove('flex');
 }
-
-// 🔥 SIMPAN PROFIL KE FIRESTORE
 async function saveProfile() {
     const newName = document.getElementById('editName').value;
     const newEmail = document.getElementById('editEmail').value;
     const newBio = document.getElementById('editBio').value;
-    
+
     try {
         const FB = await waitForFirebase();
-        
+
         if (currentUser && currentUser.uid) {
             await FB.updateDoc(FB.doc(FB.db, 'users', currentUser.uid), {
                 name: newName,
@@ -2039,20 +2028,22 @@ async function saveProfile() {
                 bio: newBio
             });
         }
-        
+
         currentUser.name = newName;
         currentUser.email = newEmail;
         currentUser.bio = newBio;
-        
+
         save(); closeEditProfile();
         showToast('Profil diperbarui');
         renderProfile(document.getElementById('app-content'));
-        
+
     } catch (err) {
-        console.error('Save profile error:', err);
+        console.error('[profile] update failed:', err);
         showToast('Gagal update profil', 'error');
     }
 }
+
+// ubah password
 function openPassword() {
     document.getElementById('oldPass').value = '';
     document.getElementById('newPass').value = '';
@@ -2063,18 +2054,43 @@ function closePassword() {
     document.getElementById('passwordModal').classList.add('hidden');
     document.getElementById('passwordModal').classList.remove('flex');
 }
-function savePassword() {
-    const o = document.getElementById('oldPass').value, n = document.getElementById('newPass').value;
-    if (!o || !n) return showToast('Semua field harus diisi', 'error');
-    if (n.length < 6) return showToast('Minimal 6 karakter', 'error');
-    closePassword();
-    showToast('Password diubah');
+async function savePassword() {
+    const oldPass = document.getElementById('oldPass').value;
+    const newPass = document.getElementById('newPass').value;
+
+    if (!oldPass || !newPass) return showToast('Semua field harus diisi', 'error');
+    if (newPass.length < 6) return showToast('Password minimal 6 karakter', 'error');
+
+    try {
+        const FB = await waitForFirebase();
+        const user = FB.auth.currentUser;
+        if (!user) throw new Error('not-signed-in');
+
+        // re-autentikasi dulu, firebase wajibkan untuk operasi sensitif
+        const cred = FB.EmailAuthProvider.credential(user.email, oldPass);
+        await FB.reauthenticateWithCredential(user, cred);
+        await FB.updatePassword(user, newPass);
+
+        closePassword();
+        showToast('Password berhasil diubah');
+    } catch (err) {
+        let msg = 'Gagal ubah password';
+        if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = 'Password lama salah';
+        else if (err.code === 'auth/weak-password') msg = 'Password baru terlalu lemah';
+        else if (err.code === 'auth/requires-recent-login') msg = 'Silakan login ulang dulu';
+        showToast(msg, 'error');
+        console.error('[auth] change password failed:', err);
+    }
 }
+
+// riwayat
 function showHistory() {
     const total = userTickets.length;
     const spent = userTickets.filter(t => t.status !== 'Dibatalkan').reduce((s, t) => s + t.total, 0);
-    alert('📜 Riwayat\n\nTotal Transaksi: ' + total + '\nTotal Belanja: Rp ' + spent.toLocaleString('id-ID') + '\nPoin: ' + currentUser.points.toLocaleString('id-ID'));
+    alert('Riwayat transaksi\n\nTotal Transaksi: ' + total + '\nTotal Belanja: Rp ' + spent.toLocaleString('id-ID') + '\nPoin: ' + currentUser.points.toLocaleString('id-ID'));
 }
+
+// loyalty
 function openLoyalty() {
     const tiers = [
         { name: "Bronze", min: 0, max: 1999, benefit: "Bonus 100 poin per booking", color: "text-orange-700" },
@@ -2116,6 +2132,8 @@ function closeLoyalty() {
     document.getElementById('loyaltyModal').classList.add('hidden');
     document.getElementById('loyaltyModal').classList.remove('flex');
 }
+
+// merchandise
 function showMerch() {
     let html = '<div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>';
     html += '<div class="flex justify-between items-center mb-4"><h3 class="text-lg font-bold">Merchandise</h3>';
@@ -2144,11 +2162,9 @@ function buyMerch(id) {
     showMerch();
 }
 
-// ==========================================
-// OWNER DASHBOARD - 🔥 LOAD DARI FIRESTORE
-// ==========================================
+// owner dashboard
 async function openOwnerDashboard() {
-    // 🔥 LOAD BOOKINGS DARI FIRESTORE
+    // load bookings dari firestore
     if (currentUser && currentUser.uid) {
         try {
             const FB = await waitForFirebase();
@@ -2157,7 +2173,7 @@ async function openOwnerDashboard() {
                 FB.where('ownerId', '==', currentUser.uid)
             );
             const snapshot = await FB.getDocs(q);
-            
+
             const fbBookings = [];
             snapshot.forEach(docSnap => {
                 const data = docSnap.data();
@@ -2171,17 +2187,17 @@ async function openOwnerDashboard() {
                     status: data.status
                 });
             });
-            
+
             if (fbBookings.length > 0) {
                 ownerBookings = fbBookings;
                 save();
-                console.log('✅ Loaded', fbBookings.length, 'bookings from Firestore');
+                console.log('[owner] loaded', fbBookings.length, 'bookings');
             }
         } catch (fbErr) {
-            console.error('Load bookings error:', fbErr);
+            console.error('[owner] load failed:', fbErr);
         }
     }
-    
+
     const mySpots = spots.filter(s => s.ownerId === currentUser.uid || s.ownerId === "owner1");
     const mySpot = mySpots[0] || spots[0];
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
@@ -2189,7 +2205,7 @@ async function openOwnerDashboard() {
     const netRevenue = revenue - platformFee;
     const confirmed = ownerBookings.filter(b => b.status === 'Confirmed').length;
     const pending = ownerBookings.filter(b => b.status === 'Pending').length;
-    
+
     let bookingsHtml = '';
     if (ownerBookings.length === 0) {
         bookingsHtml = '<p class="text-xs text-gray-400 text-center py-3">Belum ada booking</p>';
@@ -2203,7 +2219,7 @@ async function openOwnerDashboard() {
             bookingsHtml += '<div class="flex justify-between items-center mt-2"><p class="text-xs font-bold text-primary">Rp ' + b.total.toLocaleString('id-ID') + '</p>' + btn + '</div></div>';
         });
     }
-    
+
     let mySpotsHtml = '';
     mySpots.forEach(s => {
         mySpotsHtml += '<div class="bg-white border border-gray-100 rounded-xl p-3 flex items-center mb-2">';
@@ -2229,15 +2245,15 @@ async function openOwnerDashboard() {
                 <div class="bg-white bg-opacity-10 p-3 rounded-xl"><p class="text-[10px] text-gray-300">Pending</p><p class="text-base font-bold text-yellow-300">${pending}</p></div>
             </div>
         </div>
-        
+
         <button onclick="openAddSpot()" class="w-full bg-gradient-to-r from-secondary to-green-400 text-white py-3 rounded-xl font-bold shadow-lg mb-4 flex items-center justify-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Tambah Spot Pemancingan Baru
         </button>
-        
+
         <h4 class="font-bold text-sm mb-2">Spot Saya</h4>
         <div class="mb-4">${mySpotsHtml || '<p class="text-xs text-gray-400 text-center py-3">Belum ada spot</p>'}</div>
-        
+
         <h4 class="font-bold text-sm mb-2">Pengelolaan</h4>
         <div class="space-y-2 mb-4">
             <button onclick="managePrice(${mySpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
@@ -2266,10 +2282,10 @@ function closeOwner() {
     setTimeout(() => m.classList.add('hidden'), 300);
 }
 
-// 🔥 CONFIRM BOOKING - UPDATE FIRESTORE
+// konfirmasi booking
 async function confirmBooking(i) {
     ownerBookings[i].status = 'Confirmed';
-    
+
     try {
         const FB = await waitForFirebase();
         const bookingId = ownerBookings[i].id;
@@ -2277,10 +2293,10 @@ async function confirmBooking(i) {
             await FB.updateDoc(FB.doc(FB.db, 'bookings', bookingId), { status: 'Confirmed' });
         }
     } catch (err) {
-        console.error('Update booking error:', err);
+        console.error('[booking] confirm failed:', err);
     }
-    
-    save(); 
+
+    save();
     showToast('Booking ' + ownerBookings[i].customer + ' dikonfirmasi');
     closeOwner();
     setTimeout(() => openOwnerDashboard(), 400);
@@ -2308,16 +2324,14 @@ function togglePremium(spotId) {
 }
 function showStats() {
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
-    alert('📊 Statistik\n\nTotal Booking: ' + ownerBookings.length + '\nPendapatan Kotor: Rp ' + revenue.toLocaleString('id-ID') + '\nKomisi (8%): Rp ' + (revenue * 0.08).toLocaleString('id-ID') + '\nBersih: Rp ' + (revenue * 0.92).toLocaleString('id-ID'));
+    alert('Statistik\n\nTotal Booking: ' + ownerBookings.length + '\nPendapatan Kotor: Rp ' + revenue.toLocaleString('id-ID') + '\nKomisi (8%): Rp ' + (revenue * 0.08).toLocaleString('id-ID') + '\nBersih: Rp ' + (revenue * 0.92).toLocaleString('id-ID'));
 }
 function showPromo() {
     const promo = prompt('Buat promo baru:');
     if (promo) showToast('Promo "' + promo + '" dibuat!');
 }
 
-// ==========================================
-// ADD SPOT (Owner) - 🔥 SIMPAN KE FIRESTORE
-// ==========================================
+// tambah spot (owner)
 function openAddSpot() {
     closeOwner();
     const content = document.getElementById('addSpotContent');
@@ -2390,11 +2404,11 @@ function closeAddSpot() {
     content.style.transform = 'translateY(100%)';
     setTimeout(() => {
         modal.classList.add('hidden');
-        content.style.transform = '';
+        // biarkan transform tetap translateY(100%) supaya animasi slide-up
+        // tetap muncul saat modal dibuka lagi
     }, 300);
 }
 
-// 🔥 SAVE NEW SPOT - SIMPAN KE FIRESTORE
 async function saveNewSpot() {
     const name = document.getElementById('newSpotName').value.trim();
     const city = document.getElementById('newSpotCity').value.trim();
@@ -2407,12 +2421,12 @@ async function saveNewSpot() {
     const lat = parseFloat(document.getElementById('newSpotLat').value) || -6.2;
     const lng = parseFloat(document.getElementById('newSpotLng').value) || 106.8166;
     const img = document.getElementById('newSpotImage').value.trim();
-    
+
     if (!name || !city || !price) {
         showToast('Nama, kota, dan harga wajib diisi', 'error');
         return;
     }
-    
+
     const newId = Math.max(...spots.map(s => s.id), 0) + 1;
     const newSpot = {
         id: newId, name, location: fish, city, price,
@@ -2420,16 +2434,15 @@ async function saveNewSpot() {
         image: img || getImgLocal('spots', ((newId - 1) % 6) + 1),
         imageFallback: img || getImgFallback('spots', ((newId - 1) % 6) + 1),
         facilities: facilities.length > 0 ? facilities : ["Parkir", "Toilet"],
-        description: desc, 
+        description: desc,
         owner: currentUser ? currentUser.name : "Owner",
         ownerId: currentUser ? currentUser.uid : "owner1",
         premium: false, distance: 5.0, open,
         lat, lng
     };
-    
+
     spots.push(newSpot);
-    
-    // 🔥 SIMPAN SPOT KE FIRESTORE
+
     if (currentUser && currentUser.uid) {
         try {
             const FB = await waitForFirebase();
@@ -2437,21 +2450,19 @@ async function saveNewSpot() {
                 ...newSpot,
                 createdAt: FB.serverTimestamp()
             });
-            console.log('✅ Spot saved to Firestore');
+            console.log('[spot] saved');
         } catch (fbErr) {
-            console.error('Save spot error:', fbErr);
+            console.error('[spot] save failed:', fbErr);
         }
     }
-    
+
     save();
     closeAddSpot();
     showToast('Spot "' + name + '" berhasil ditambahkan!');
     setTimeout(() => openOwnerDashboard(), 400);
 }
 
-// ==========================================
-// ADMIN DASHBOARD
-// ==========================================
+// admin dashboard
 function renderAdminDashboard(container) {
     const totalRevenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
     const platformRevenue = totalRevenue * 0.08;
@@ -2460,7 +2471,7 @@ function renderAdminDashboard(container) {
     const totalBookings = ownerBookings.length;
     const totalOwners = registeredUsers.filter(u => u.type === 'owner').length;
     const totalPemancing = registeredUsers.filter(u => u.type === 'pemancing').length;
-    
+
     container.innerHTML = `
         <div class="px-5 pt-4 pb-4 bg-dark text-white rounded-b-3xl">
             <div class="flex items-center gap-3 mb-3">
@@ -2569,7 +2580,7 @@ function renderAdminSpots(container) {
         spotsHtml += '<button onclick="adminDeleteSpot(' + s.id + ')" class="flex-1 bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold">Hapus</button>';
         spotsHtml += '</div></div>';
     });
-    
+
     container.innerHTML = `
         <div class="px-5 pt-4 pb-3 bg-white">
             <div class="flex justify-between items-center">
@@ -2621,7 +2632,7 @@ function renderAdminUsers(container) {
         usersHtml += '<span class="text-[9px] text-gray-400">' + (u.joinDate || '-') + '</span></div>';
         usersHtml += '</div></div>';
     });
-    
+
     container.innerHTML = `
         <div class="px-5 pt-4 pb-3 bg-white">
             <div class="flex justify-between items-center">
@@ -2636,7 +2647,7 @@ function renderAdminUsers(container) {
 function renderAdminBookings(container) {
     const total = ownerBookings.reduce((s, b) => s + b.total, 0);
     const platform = total * 0.08;
-    
+
     let bookingsHtml = '';
     ownerBookings.forEach(b => {
         const statusCls = b.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
@@ -2650,7 +2661,7 @@ function renderAdminBookings(container) {
         bookingsHtml += '<p class="text-[9px] text-gray-400">Komisi: Rp ' + (b.total * 0.08).toLocaleString('id-ID') + '</p>';
         bookingsHtml += '</div></div>';
     });
-    
+
     container.innerHTML = `
         <div class="px-5 pt-4 pb-3 bg-white">
             <h2 class="text-lg font-bold mb-3">Kelola Booking</h2>
@@ -2669,9 +2680,7 @@ function renderAdminBookings(container) {
     `;
 }
 
-// ==========================================
-// ABOUT
-// ==========================================
+// about
 function openAbout() {
     document.getElementById('aboutModal').classList.remove('hidden');
     document.getElementById('aboutModal').classList.add('flex');
@@ -2681,9 +2690,7 @@ function closeAbout() {
     document.getElementById('aboutModal').classList.remove('flex');
 }
 
-// ==========================================
-// INVITE
-// ==========================================
+// invite
 function inviteFriend() {
     if (!currentUser) return openAuth();
     currentUser.points = (currentUser.points || 0) + 200;
@@ -2700,42 +2707,38 @@ function fallbackCopy(text) {
     } else showToast('Link: mancingyuk.app/invite', 'info');
 }
 
-// ==========================================
-// 🔥 INIT - AUTH STATE LISTENER
-// ==========================================
+// init + auth state listener
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('MancingYuk! v3.3 loaded - Firebase Edition');
+    console.log('[app] MancingYuk started');
     try {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
             document.getElementById('darkBtn').textContent = '☀️';
         }
         updateNotifBadge();
-        
-        // Tunggu Firebase siap
+
         const FB = await waitForFirebase();
-        console.log('🔥 Firebase ready, setting up auth listener...');
-        
-        // AUTH STATE LISTENER
+        console.log('[init] waiting for auth state');
+
         FB.onAuthStateChanged(FB.auth, async (user) => {
             if (user) {
                 try {
                     const profileRef = FB.doc(FB.db, 'users', user.uid);
                     const profileSnap = await FB.getDoc(profileRef);
-                    
+
                     if (profileSnap.exists()) {
                         currentUser = { ...profileSnap.data(), uid: user.uid, email: user.email };
                         save();
                         updateRoleUI();
-                        
+
                         document.getElementById('onboardingModal').classList.add('hidden');
                         document.getElementById('authModal').classList.add('hidden');
                         document.getElementById('authModal').classList.remove('flex');
-                        
+
                         switchTab(currentUser.type === 'admin' ? 'admin-dashboard' : 'home');
-                        console.log('✅ User restored:', currentUser.name, '(', currentUser.type, ')');
-                        
-                        // Load registered users untuk admin
+                        console.log('[auth] restored:', currentUser.name, '(' + currentUser.type + ')');
+
+                        // load data lengkap untuk admin
                         if (currentUser.type === 'admin') {
                             try {
                                 const usersSnap = await FB.getDocs(FB.collection(FB.db, 'users'));
@@ -2749,21 +2752,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         joinDate: data.joinDate || '-'
                                     });
                                 });
+
+                                // admin butuh semua booking dari semua owner
+                                // untuk dashboard & halaman bookings
+                                const bookingsSnap = await FB.getDocs(FB.collection(FB.db, 'bookings'));
+                                ownerBookings = [];
+                                bookingsSnap.forEach(d => {
+                                    const data = d.data();
+                                    ownerBookings.push({
+                                        id: d.id,
+                                        customer: data.userName,
+                                        spot: data.spotName,
+                                        date: data.date,
+                                        qty: data.qty,
+                                        total: data.total,
+                                        status: data.status
+                                    });
+                                });
+
                                 save();
-                            } catch (e) { console.warn('Load users error:', e); }
+                            } catch (e) { console.warn('[admin] load data failed:', e); }
                         }
                     } else {
-                        console.warn('Profile not found, signing out');
+                        console.warn('[auth] profile not found, signing out');
                         await FB.signOut(FB.auth);
                     }
                 } catch (err) {
-                    console.error('Load profile error:', err);
+                    console.error('[auth] load profile failed:', err);
                     openAuth();
                 }
             } else {
                 currentUser = null;
                 save();
-                
+
                 if (!onboardingDone) {
                     document.getElementById('onboardingModal').classList.remove('hidden');
                     document.getElementById('onboardingModal').classList.add('flex');
@@ -2773,9 +2794,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
-        
+
     } catch (err) {
-        console.error('Init error:', err);
+        console.error('[init] failed:', err);
         document.getElementById('app-content').innerHTML = '<div class="p-5 text-red-500 text-sm">Init Error: ' + err.message + '</div>';
     }
 });
