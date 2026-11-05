@@ -1,65 +1,19 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // helper: cek role admin dari koleksi users
-    function isAdmin() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.type == 'admin';
-    }
-
-    // users: profil cuma bisa dibaca/diubah sama pemiliknya, admin boleh update
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow delete: if false;
-
-      // subcollection lama: booking per user
-      match /bookings/{bookingId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-
-    // spots: publik bisa baca, yang bisa ubah cuma owner spot atau admin
-    match /spots/{spotId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
-    }
-
-    // bookings: user bikin booking sendiri, owner/admin yang bisa ubah status
-    match /bookings/{bookingId} {
-      allow read: if request.auth != null
-        && (resource.data.userId == request.auth.uid
-            || resource.data.ownerId == request.auth.uid
-            || isAdmin());
-      allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && (resource.data.ownerId == request.auth.uid || isAdmin());
-      allow delete: if false;
-    }
-
-    // tickets: private per user, admin tidak perlu lihat detail tiket
-    match /tickets/{ticketId} {
-      allow read: if request.auth != null
-        && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null
-        && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.userId == request.auth.uid;
-      allow delete: if false;
-    }
-
-    // chat: dokumen induk + subcollection messages
-    match /chats/{chatId} {
-      allow read, write: if request.auth != null;
-
-      match /messages/{messageId} {
-        allow read, write: if request.auth != null;
-      }
+    // This rule allows anyone with your Firestore database reference to view, edit,
+    // and delete all data in your Firestore database. It is useful for getting
+    // started, but it is configured to expire after 30 days because it
+    // leaves your app open to attackers. At that time, all client
+    // requests to your Firestore database will be denied.
+    //
+    // Make sure to write security rules for your app before that time, or else
+    // all client requests to your Firestore database will be denied until you Update
+    // your rules
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2026, 12, 5);
     }
   }
 }
