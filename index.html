@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MancingYuk! - Booking Pemancingan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -23,8 +23,18 @@
 </head>
 <body class="bg-gray-800 flex justify-center items-center h-[100dvh] overflow-hidden">
 
+<noscript>
+    <div style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; padding: 20px; font-family: sans-serif; z-index: 9999;">
+        <div style="text-align: center; max-width: 400px;">
+            <h2 style="color: #1e293b; margin-bottom: 12px;">JavaScript Diperlukan</h2>
+            <p style="color: #64748b; font-size: 14px;">Aplikasi MancingYuk! membutuhkan JavaScript untuk berjalan. Silakan aktifkan JavaScript di browser Anda lalu refresh halaman.</p>
+        </div>
+    </div>
+</noscript>
+
 <div id="phoneFrame" class="relative w-full h-full md:w-[400px] md:h-[85vh] md:max-h-[850px] bg-white md:rounded-[40px] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col">
 
+    <!-- Status bar desktop -->
     <div class="hidden md:flex justify-between items-center px-6 pt-3 pb-1 bg-white text-xs font-semibold text-gray-800 z-50 shrink-0">
         <span>09:41</span>
         <div class="flex space-x-2">
@@ -167,9 +177,18 @@
         <p class="text-center text-xs text-gray-400 mt-6">Dengan masuk, Anda menyetujui S&K MancingYuk!</p>
     </div>
 
-    <!-- Detail spot -->
+    <!-- Detail spot (juga dipakai previewSpot) -->
     <div id="detailModal" class="absolute inset-0 bg-black bg-opacity-60 hidden z-[60]">
         <div id="detailContent" class="absolute bottom-0 w-full h-[90%] bg-white rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 overflow-y-auto"></div>
+    </div>
+
+    <!-- Halaman tiket saya -->
+    <div id="ticketsPage" class="absolute inset-0 bg-gray-50 hidden z-[75] flex-col">
+        <div class="bg-white px-5 py-4 flex items-center shadow-sm shrink-0">
+            <button onclick="closeTicketsPage()" class="mr-4 text-gray-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+            <h2 class="text-lg font-bold text-dark">Tiket Saya</h2>
+        </div>
+        <div id="ticketsPageContent" class="flex-1 overflow-y-auto p-5"></div>
     </div>
 
     <!-- Checkout -->
@@ -250,15 +269,6 @@
         </div>
         <button onclick="closeSuccess()" class="w-full bg-primary text-white py-3.5 rounded-xl font-bold mb-2">Lihat Tiket Saya</button>
         <button onclick="closeSuccess(true)" class="w-full bg-gray-200 text-gray-700 py-3.5 rounded-xl font-bold">Kembali ke Beranda</button>
-    </div>
-
-    <!-- Halaman tiket saya -->
-    <div id="ticketsPage" class="absolute inset-0 bg-gray-50 hidden z-[75] flex-col">
-        <div class="bg-white px-5 py-4 flex items-center shadow-sm shrink-0">
-            <button onclick="closeTicketsPage()" class="mr-4 text-gray-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
-            <h2 class="text-lg font-bold text-dark">Tiket Saya</h2>
-        </div>
-        <div id="ticketsPageContent" class="flex-1 overflow-y-auto p-5"></div>
     </div>
 
     <!-- Review -->
@@ -366,7 +376,7 @@
         <div id="ownerSpotContent" class="absolute bottom-0 w-full h-[90%] bg-white rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 overflow-y-auto"></div>
     </div>
 
-    <!-- Form tambah spot -->
+    <!-- Form tambah/edit spot (dipakai openAddSpot & openEditSpot) -->
     <div id="addSpotModal" class="absolute inset-0 bg-black bg-opacity-60 hidden z-[96]">
         <div id="addSpotContent" class="absolute bottom-0 w-full h-[92%] bg-white rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 overflow-y-auto"></div>
     </div>
