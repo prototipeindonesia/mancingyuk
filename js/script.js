@@ -20,6 +20,60 @@ function waitForFirebase() {
     });
 }
 
+// ⚠️ SETUP AWAL — auto-create admin pertama kali
+// HAPUS fungsi ini + panggilan ensureAdminExists() setelah admin berhasil dibuat
+async function ensureAdminExists() {
+    const ADMIN_EMAIL = 'admin@mancingyuk.com';
+    const ADMIN_PASS = 'Admin1234!';
+    const ADMIN_NAME = 'Admin MancingYuk';
+    const API_KEY = 'AIzaSyBlAfIdidxvZjl9DxkXMcdyQaBVS19CPac';
+
+    try {
+        const FB = await waitForFirebase();
+
+        // cek dulu — kalau bisa login, admin sudah ada
+        try {
+            await FB.signInWithEmailAndPassword(FB.auth, ADMIN_EMAIL, ADMIN_PASS);
+            console.log('[admin] sudah ada, skip');
+            await FB.signOut(FB.auth);
+            return;
+        } catch (loginErr) {
+            if (loginErr.code !== 'auth/user-not-found' && loginErr.code !== 'auth/invalid-credential') {
+                throw loginErr;
+            }
+        }
+
+        // buat user baru via REST API (supaya tidak logout admin lain yang sedang login)
+        const res = await fetch(
+            `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${API_KEY}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS, returnSecureToken: false })
+            }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || 'Gagal buat admin');
+
+        // simpan profil di Firestore
+        await FB.setDoc(FB.doc(FB.db, 'users', data.localId), {
+            name: ADMIN_NAME,
+            email: ADMIN_EMAIL,
+            type: 'admin',
+            points: 0,
+            level: 'Administrator',
+            bio: 'Admin platform MancingYuk!',
+            joinDate: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+            createdAt: FB.serverTimestamp()
+        });
+
+        console.log('%c[admin] berhasil dibuat: ' + ADMIN_EMAIL, 'color:green;font-weight:bold');
+        console.log('%c⚠️ HAPUS ensureAdminExists() dari script.js sekarang!', 'color:red;font-weight:bold');
+    } catch (err) {
+        console.error('[admin] gagal:', err.message);
+    }
+}
+
 // gambar
 const IMG = {
     spots: {
@@ -967,7 +1021,6 @@ function closeMap() {
     modal.classList.remove('flex');
     if (leafletMap) { leafletMap.remove(); leafletMap = null; mapMarkers = []; }
 }
-
 // partner detail
 function showAllPartners() {
     const modal = document.getElementById('partnerModal');
@@ -1664,7 +1717,6 @@ function cancelTicket(index) {
     if (!document.getElementById('ticketsPage').classList.contains('hidden')) renderTicketsPage();
     else renderTickets(document.getElementById('app-content'));
 }
-
 // detail spot
 function openDetail(id) {
     if (!currentUser) return openAuth();
@@ -2716,6 +2768,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('darkBtn').textContent = '☀️';
         }
         updateNotifBadge();
+
+        // ⚠️ HAPUS baris ini setelah admin berhasil dibuat
+        await ensureAdminExists();
 
         const FB = await waitForFirebase();
         console.log('[init] waiting for auth state');
