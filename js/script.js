@@ -853,6 +853,8 @@ function clearSearch() { currentSearchQuery = ''; renderHome(document.getElement
 
 function getFilteredSpots() {
     let filtered = spots.filter(s => {
+        // hanya tampilkan spot yang sudah di-approve admin
+        if (s.status && s.status !== 'approved') return false;
         const mQ = !currentSearchQuery || s.name.toLowerCase().includes(currentSearchQuery.toLowerCase()) || s.location.toLowerCase().includes(currentSearchQuery.toLowerCase()) || s.city.toLowerCase().includes(currentSearchQuery.toLowerCase());
         const mC = currentCategory === 'all' || s.location.toLowerCase().includes(currentCategory.toLowerCase());
         return mQ && mC;
@@ -2291,36 +2293,71 @@ async function openOwnerDashboard() {
     }
 
     // CRUD spot cards — versi lengkap
-    let mySpotsHtml = '';
-    if (mySpots.length === 0) {
-        mySpotsHtml = '<div class="bg-white border border-dashed border-gray-300 rounded-xl p-6 text-center">'
-            + '<p class="text-3xl mb-2">📍</p>'
-            + '<p class="text-xs text-gray-500 mb-3">Belum ada spot. Tambah spot pertama Mas!</p>'
-            + '<button onclick="openAddSpot()" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold">+ Tambah Spot</button>'
-            + '</div>';
-    } else {
-        mySpots.forEach(s => {
-            mySpotsHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-3 shadow-sm">';
-            mySpotsHtml += '<div class="flex gap-3 mb-3">';
-            mySpotsHtml += imgTag(s.image, s.imageFallback, s.name, "w-16 h-16 object-cover rounded-xl");
-            mySpotsHtml += '<div class="flex-1 min-w-0">';
-            mySpotsHtml += '<div class="flex items-center gap-1 mb-0.5">';
-            mySpotsHtml += '<h4 class="text-sm font-bold text-dark truncate">' + s.name + '</h4>';
-            if (s.premium) mySpotsHtml += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">⭐</span>';
-            mySpotsHtml += '</div>';
-            mySpotsHtml += '<p class="text-[10px] text-gray-500">📍 ' + s.city + ' • ' + s.location + '</p>';
-            mySpotsHtml += '<p class="text-xs font-bold text-primary mt-1">Rp ' + s.price.toLocaleString('id-ID') + '/orang</p>';
-            mySpotsHtml += '<p class="text-[10px] text-gray-400">🎣 ' + s.slots + ' slot • 🕒 ' + s.open + '</p>';
-            mySpotsHtml += '</div></div>';
-            // aksi
-            mySpotsHtml += '<div class="grid grid-cols-3 gap-2">';
-            mySpotsHtml += '<button onclick="openEditSpot(' + s.id + ')" class="bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold">✏️ Edit</button>';
-            mySpotsHtml += '<button onclick="previewSpot(' + s.id + ')" class="bg-green-100 text-green-700 py-2 rounded-lg text-[10px] font-bold">👁️ Lihat</button>';
-            mySpotsHtml += '<button onclick="deleteOwnerSpot(' + s.id + ')" class="bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold">🗑️ Hapus</button>';
-            mySpotsHtml += '</div></div>';
-        });
+       // kelompokkan spot berdasarkan status
+    const spotsPending = mySpots.filter(s => s.status === 'pending');
+    const spotsApproved = mySpots.filter(s => !s.status || s.status === 'approved');
+    const spotsRejected = mySpots.filter(s => s.status === 'rejected');
+
+    // helper render kartu spot
+    function renderOwnerSpotCard(s) {
+        let html = '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-3 shadow-sm">';
+        html += '<div class="flex gap-3 mb-3">';
+        html += imgTag(s.image, s.imageFallback, s.name, "w-16 h-16 object-cover rounded-xl");
+        html += '<div class="flex-1 min-w-0">';
+        html += '<div class="flex items-center gap-1 mb-0.5 flex-wrap">';
+        html += '<h4 class="text-sm font-bold text-dark truncate">' + s.name + '</h4>';
+        if (s.premium && (!s.status || s.status === 'approved')) {
+            html += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">⭐</span>';
+        }
+        // badge status
+        if (s.status === 'pending') {
+            html += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">⏳ Menunggu</span>';
+        } else if (s.status === 'rejected') {
+            html += '<span class="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">❌ Ditolak</span>';
+        } else {
+            html += '<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">✅ Aktif</span>';
+        }
+        html += '</div>';
+        html += '<p class="text-[10px] text-gray-500">📍 ' + s.city + ' • ' + s.location + '</p>';
+        html += '<p class="text-xs font-bold text-primary mt-1">Rp ' + s.price.toLocaleString('id-ID') + '/orang</p>';
+        html += '<p class="text-[10px] text-gray-400">🎣 ' + s.slots + ' slot • 🕒 ' + s.open + '</p>';
+        // alasan penolakan
+        if (s.status === 'rejected' && s.rejectReason) {
+            html += '<div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">';
+            html += '<p class="text-[10px] text-red-700"><b>Alasan ditolak:</b> ' + s.rejectReason + '</p>';
+            html += '</div>';
+        }
+        html += '</div></div>';
+        // aksi berdasarkan status
+        html += '<div class="grid grid-cols-3 gap-2">';
+        if (s.status === 'rejected') {
+            html += '<button onclick="openEditSpot(' + s.id + ')" class="bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold col-span-1">✏️ Edit</button>';
+            html += '<button onclick="resubmitSpot(' + s.id + ')" class="bg-yellow-100 text-yellow-700 py-2 rounded-lg text-[10px] font-bold col-span-1">🔄 Ajukan Ulang</button>';
+            html += '<button onclick="deleteOwnerSpot(' + s.id + ')" class="bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold col-span-1">🗑️ Hapus</button>';
+        } else if (s.status === 'pending') {
+            html += '<button onclick="openEditSpot(' + s.id + ')" class="bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold col-span-1">✏️ Edit</button>';
+            html += '<button onclick="previewSpot(' + s.id + ')" class="bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] font-bold col-span-1">👁️ Preview</button>';
+            html += '<button onclick="deleteOwnerSpot(' + s.id + ')" class="bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold col-span-1">🗑️ Hapus</button>';
+        } else {
+            html += '<button onclick="openEditSpot(' + s.id + ')" class="bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold col-span-1">✏️ Edit</button>';
+            html += '<button onclick="previewSpot(' + s.id + ')" class="bg-green-100 text-green-700 py-2 rounded-lg text-[10px] font-bold col-span-1">👁️ Lihat</button>';
+            html += '<button onclick="deleteOwnerSpot(' + s.id + ')" class="bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold col-span-1">🗑️ Hapus</button>';
+        }
+        html += '</div></div>';
+        return html;
     }
 
+    // render per tab
+    let spotsApprovedHtml = spotsApproved.length === 0
+        ? '<p class="text-xs text-gray-400 text-center py-3">Belum ada spot aktif</p>'
+        : spotsApproved.map(renderOwnerSpotCard).join('');
+    let spotsPendingHtml = spotsPending.length === 0
+        ? '<p class="text-xs text-gray-400 text-center py-3">Tidak ada pengajuan menunggu</p>'
+        : spotsPending.map(renderOwnerSpotCard).join('');
+    let spotsRejectedHtml = spotsRejected.length === 0
+        ? '<p class="text-xs text-gray-400 text-center py-3">Tidak ada spot ditolak</p>'
+        : spotsRejected.map(renderOwnerSpotCard).join('');
+    
     const firstSpot = mySpots[0];
 
     document.getElementById('ownerSpotContent').innerHTML = `
@@ -2344,8 +2381,23 @@ async function openOwnerDashboard() {
             Tambah Spot Pemancingan Baru
         </button>
 
-        <h4 class="font-bold text-sm mb-2">Spot Saya</h4>
-        <div class="mb-4">${mySpotsHtml}</div>
+                <h4 class="font-bold text-sm mb-2">Spot Saya</h4>
+        <div class="mb-2 flex gap-1 bg-gray-100 p-1 rounded-xl">
+            <button onclick="switchOwnerSpotTab('approved')" id="spotTab-approved" class="flex-1 py-1.5 text-[10px] font-semibold bg-white text-primary rounded-lg shadow-sm">
+                ✅ Aktif (${spotsApproved.length})
+            </button>
+            <button onclick="switchOwnerSpotTab('pending')" id="spotTab-pending" class="flex-1 py-1.5 text-[10px] font-semibold text-gray-500 rounded-lg">
+                ⏳ Menunggu (${spotsPending.length})
+            </button>
+            <button onclick="switchOwnerSpotTab('rejected')" id="spotTab-rejected" class="flex-1 py-1.5 text-[10px] font-semibold text-gray-500 rounded-lg">
+                ❌ Ditolak (${spotsRejected.length})
+            </button>
+        </div>
+        <div class="mb-4">
+            <div id="spotList-approved">${spotsApprovedHtml}</div>
+            <div id="spotList-pending" class="hidden">${spotsPendingHtml}</div>
+            <div id="spotList-rejected" class="hidden">${spotsRejectedHtml}</div>
+        </div>
 
         <h4 class="font-bold text-sm mb-2">Pengelolaan</h4>
         <div class="space-y-2 mb-4">
@@ -2375,6 +2427,61 @@ function closeOwner() {
     const m = document.getElementById('ownerSpotModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
+}
+
+// Tab switch di spot owner
+function switchOwnerSpotTab(tab) {
+    ['approved', 'pending', 'rejected'].forEach(t => {
+        const btn = document.getElementById('spotTab-' + t);
+        const list = document.getElementById('spotList-' + t);
+        if (!btn || !list) return;
+        if (t === tab) {
+            btn.className = 'flex-1 py-1.5 text-[10px] font-semibold bg-white text-primary rounded-lg shadow-sm';
+            list.classList.remove('hidden');
+        } else {
+            btn.className = 'flex-1 py-1.5 text-[10px] font-semibold text-gray-500 rounded-lg';
+            list.classList.add('hidden');
+        }
+    });
+}
+
+// Ajukan ulang spot yang ditolak
+async function resubmitSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+    if (!confirm('Ajukan ulang spot "' + s.name + '" untuk direview admin?')) return;
+
+    try {
+        const FB = await waitForFirebase();
+        const q = FB.query(
+            FB.collection(FB.db, 'spots'),
+            FB.where('id', '==', spotId),
+            FB.where('ownerId', '==', currentUser.uid)
+        );
+        const snap = await FB.getDocs(q);
+        if (!snap.empty) {
+            const docId = snap.docs[0].id;
+            await FB.updateDoc(FB.doc(FB.db, 'spots', docId), {
+                status: 'pending',
+                rejectReason: null,
+                resubmittedAt: new Date().toISOString()
+            });
+        }
+    } catch (err) {
+        console.error('[spot] resubmit failed:', err);
+        showToast('Gagal ajukan ulang', 'error');
+        return;
+    }
+
+    const idx = spots.findIndex(x => x.id === spotId);
+    if (idx >= 0) {
+        spots[idx].status = 'pending';
+        spots[idx].rejectReason = null;
+    }
+    save();
+    showToast('Spot diajukan ulang ke admin', 'info');
+    closeOwner();
+    setTimeout(() => openOwnerDashboard(), 400);
 }
 
 // ==========================================
@@ -2754,7 +2861,7 @@ async function saveNewSpot() {
     }
 
     const newId = Math.max(...spots.map(s => s.id), 0) + 1;
-    const newSpot = {
+        const newSpot = {
         id: newId, name, location: fish, city, price,
         rating: 5.0, reviews: 0, slots,
         image: img || getImgLocal('spots', ((newId - 1) % 6) + 1),
@@ -2764,9 +2871,10 @@ async function saveNewSpot() {
         owner: currentUser ? currentUser.name : "Owner",
         ownerId: currentUser ? currentUser.uid : "owner1",
         premium: premium, distance: 5.0, open,
-        lat, lng
+        lat, lng,
+        status: 'pending', // ← spot baru harus di-approve admin dulu
+        submittedAt: new Date().toISOString()
     };
-
     spots.push(newSpot);
 
     if (currentUser && currentUser.uid) {
@@ -2785,7 +2893,7 @@ async function saveNewSpot() {
 
     save();
     closeAddSpot();
-    showToast('Spot "' + name + '" berhasil ditambahkan!');
+    showToast('Spot "' + name + '" diajukan! Tunggu review admin (1-3 hari kerja).', 'info');
     setTimeout(() => openOwnerDashboard(), 400);
 }
 // admin dashboard
