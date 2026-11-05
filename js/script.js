@@ -26,7 +26,7 @@ async function ensureAdminExists() {
     const ADMIN_EMAIL = 'admin@mancingyuk.com';
     const ADMIN_PASS = 'Admin1234!';
     const ADMIN_NAME = 'Admin MancingYuk';
-    const API_KEY = 'AIzaSyBlAfIdidxvZjl9DxkXMcdyQaBVS19CPac';
+    const API_KEY = 'AIzaSyB9PmYeF70sCTe8wWu9BHatFNYPjdE1Zd4';
 
     try {
         const FB = await waitForFirebase();
