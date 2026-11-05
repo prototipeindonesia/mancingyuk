@@ -2215,22 +2215,43 @@ function buyMerch(id) {
 }
 
 // owner dashboard
+// owner dashboard
 async function openOwnerDashboard() {
-    // load bookings dari firestore
+    // sync spots dari firestore (hanya milik owner yang login)
     if (currentUser && currentUser.uid) {
         try {
             const FB = await waitForFirebase();
-            const q = FB.query(
+
+            // load spots milik owner
+            const spotQ = FB.query(
+                FB.collection(FB.db, 'spots'),
+                FB.where('ownerId', '==', currentUser.uid)
+            );
+            const spotSnap = await FB.getDocs(spotQ);
+            const fbSpots = [];
+            spotSnap.forEach(d => {
+                const data = d.data();
+                fbSpots.push({ ...data, firestoreId: d.id });
+            });
+            // merge dengan spots lokal (hindari duplikat pakai id)
+            if (fbSpots.length > 0) {
+                const ids = new Set(fbSpots.map(s => s.id));
+                spots = [...fbSpots, ...spots.filter(s => !ids.has(s.id))];
+                save();
+                console.log('[owner] loaded', fbSpots.length, 'spots dari firestore');
+            }
+
+            // load bookings milik owner
+            const bookQ = FB.query(
                 FB.collection(FB.db, 'bookings'),
                 FB.where('ownerId', '==', currentUser.uid)
             );
-            const snapshot = await FB.getDocs(q);
-
+            const bookSnap = await FB.getDocs(bookQ);
             const fbBookings = [];
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data();
+            bookSnap.forEach(d => {
+                const data = d.data();
                 fbBookings.push({
-                    id: docSnap.id,
+                    id: d.id,
                     customer: data.userName,
                     spot: data.spotName,
                     date: data.date,
@@ -2239,19 +2260,16 @@ async function openOwnerDashboard() {
                     status: data.status
                 });
             });
-
             if (fbBookings.length > 0) {
                 ownerBookings = fbBookings;
                 save();
-                console.log('[owner] loaded', fbBookings.length, 'bookings');
             }
         } catch (fbErr) {
-            console.error('[owner] load failed:', fbErr);
+            console.error('[owner] sync failed:', fbErr);
         }
     }
 
-    const mySpots = spots.filter(s => s.ownerId === currentUser.uid || s.ownerId === "owner1");
-    const mySpot = mySpots[0] || spots[0];
+    const mySpots = spots.filter(s => s.ownerId === currentUser.uid);
     const revenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
     const platformFee = revenue * 0.08;
     const netRevenue = revenue - platformFee;
@@ -2272,15 +2290,38 @@ async function openOwnerDashboard() {
         });
     }
 
+    // CRUD spot cards — versi lengkap
     let mySpotsHtml = '';
-    mySpots.forEach(s => {
-        mySpotsHtml += '<div class="bg-white border border-gray-100 rounded-xl p-3 flex items-center mb-2">';
-        mySpotsHtml += imgTag(s.image, s.imageFallback, s.name, "w-12 h-12 object-cover rounded-lg mr-3");
-        mySpotsHtml += '<div class="flex-1"><p class="text-xs font-bold">' + s.name + '</p>';
-        mySpotsHtml += '<p class="text-[10px] text-gray-500">' + s.city + ' • Rp ' + s.price.toLocaleString('id-ID') + '</p></div>';
-        mySpotsHtml += '<button onclick="managePrice(' + s.id + ')" class="text-primary text-xs">✏️</button>';
-        mySpotsHtml += '</div>';
-    });
+    if (mySpots.length === 0) {
+        mySpotsHtml = '<div class="bg-white border border-dashed border-gray-300 rounded-xl p-6 text-center">'
+            + '<p class="text-3xl mb-2">📍</p>'
+            + '<p class="text-xs text-gray-500 mb-3">Belum ada spot. Tambah spot pertama Mas!</p>'
+            + '<button onclick="openAddSpot()" class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold">+ Tambah Spot</button>'
+            + '</div>';
+    } else {
+        mySpots.forEach(s => {
+            mySpotsHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-3 shadow-sm">';
+            mySpotsHtml += '<div class="flex gap-3 mb-3">';
+            mySpotsHtml += imgTag(s.image, s.imageFallback, s.name, "w-16 h-16 object-cover rounded-xl");
+            mySpotsHtml += '<div class="flex-1 min-w-0">';
+            mySpotsHtml += '<div class="flex items-center gap-1 mb-0.5">';
+            mySpotsHtml += '<h4 class="text-sm font-bold text-dark truncate">' + s.name + '</h4>';
+            if (s.premium) mySpotsHtml += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">⭐</span>';
+            mySpotsHtml += '</div>';
+            mySpotsHtml += '<p class="text-[10px] text-gray-500">📍 ' + s.city + ' • ' + s.location + '</p>';
+            mySpotsHtml += '<p class="text-xs font-bold text-primary mt-1">Rp ' + s.price.toLocaleString('id-ID') + '/orang</p>';
+            mySpotsHtml += '<p class="text-[10px] text-gray-400">🎣 ' + s.slots + ' slot • 🕒 ' + s.open + '</p>';
+            mySpotsHtml += '</div></div>';
+            // aksi
+            mySpotsHtml += '<div class="grid grid-cols-3 gap-2">';
+            mySpotsHtml += '<button onclick="openEditSpot(' + s.id + ')" class="bg-blue-100 text-primary py-2 rounded-lg text-[10px] font-bold">✏️ Edit</button>';
+            mySpotsHtml += '<button onclick="previewSpot(' + s.id + ')" class="bg-green-100 text-green-700 py-2 rounded-lg text-[10px] font-bold">👁️ Lihat</button>';
+            mySpotsHtml += '<button onclick="deleteOwnerSpot(' + s.id + ')" class="bg-red-100 text-red-600 py-2 rounded-lg text-[10px] font-bold">🗑️ Hapus</button>';
+            mySpotsHtml += '</div></div>';
+        });
+    }
+
+    const firstSpot = mySpots[0];
 
     document.getElementById('ownerSpotContent').innerHTML = `
         <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
@@ -2304,17 +2345,19 @@ async function openOwnerDashboard() {
         </button>
 
         <h4 class="font-bold text-sm mb-2">Spot Saya</h4>
-        <div class="mb-4">${mySpotsHtml || '<p class="text-xs text-gray-400 text-center py-3">Belum ada spot</p>'}</div>
+        <div class="mb-4">${mySpotsHtml}</div>
 
         <h4 class="font-bold text-sm mb-2">Pengelolaan</h4>
         <div class="space-y-2 mb-4">
-            <button onclick="managePrice(${mySpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
-                <div class="flex items-center gap-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">💰</div><div><p class="text-xs font-bold">Atur Harga</p><p class="text-[10px] text-gray-500">Rp ${mySpot.price.toLocaleString('id-ID')}</p></div></div><span class="text-gray-400">›</span>
+            ${firstSpot ? `
+            <button onclick="openEditSpot(${firstSpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
+                <div class="flex items-center gap-3"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">💰</div><div><p class="text-xs font-bold">Atur Harga & Detail</p><p class="text-[10px] text-gray-500">Edit semua info spot</p></div></div><span class="text-gray-400">›</span>
             </button>
-            <button onclick="togglePremium(${mySpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
-                <div class="flex items-center gap-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">⭐</div><div><p class="text-xs font-bold">Premium Listing</p><p class="text-[10px] text-gray-500">${mySpot.premium ? 'Aktif' : 'Rp 100rb/bulan'}</p></div></div>
-                <div class="w-10 h-5 ${mySpot.premium ? 'bg-primary' : 'bg-gray-300'} rounded-full relative"><div class="w-4 h-4 bg-white rounded-full absolute top-0.5 ${mySpot.premium ? 'right-0.5' : 'left-0.5'}"></div></div>
+            <button onclick="togglePremium(${firstSpot.id})" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
+                <div class="flex items-center gap-3"><div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">⭐</div><div><p class="text-xs font-bold">Premium Listing</p><p class="text-[10px] text-gray-500">${firstSpot.premium ? 'Aktif' : 'Rp 100rb/bulan'}</p></div></div>
+                <div class="w-10 h-5 ${firstSpot.premium ? 'bg-primary' : 'bg-gray-300'} rounded-full relative"><div class="w-4 h-4 bg-white rounded-full absolute top-0.5 ${firstSpot.premium ? 'right-0.5' : 'left-0.5'}"></div></div>
             </button>
+            ` : ''}
             <button onclick="showStats()" class="w-full bg-white border border-gray-100 p-3 rounded-xl flex items-center justify-between text-left">
                 <div class="flex items-center gap-3"><div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">📊</div><div><p class="text-xs font-bold">Statistik</p><p class="text-[10px] text-gray-500">Laporan</p></div></div><span class="text-gray-400">›</span>
             </button>
@@ -2332,6 +2375,225 @@ function closeOwner() {
     const m = document.getElementById('ownerSpotModal');
     m.classList.remove('show');
     setTimeout(() => m.classList.add('hidden'), 300);
+}
+
+// ==========================================
+// CRUD SPOT OWNER — Detail & Lengkap
+// ==========================================
+
+// FORM EDIT SPOT (dipakai untuk edit & tambah)
+function openEditSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return showToast('Spot tidak ditemukan', 'error');
+    if (s.ownerId !== currentUser.uid) return showToast('Bukan spot Anda', 'error');
+
+    closeOwner();
+
+    const modal = document.getElementById('addSpotModal');
+    const content = document.getElementById('addSpotContent');
+    const facilitiesValue = (s.facilities || []).join(', ');
+
+    content.innerHTML = `
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Edit Spot</h3>
+            <button onclick="closeAddSpot()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <input type="hidden" id="editSpotId" value="${s.id}">
+
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Spot *</label>
+            <input type="text" id="newSpotName" value="${s.name}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Kota *</label>
+            <input type="text" id="newSpotCity" value="${s.city}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Jenis Ikan (pisahkan dengan koma)</label>
+            <input type="text" id="newSpotFish" value="${s.location}" placeholder="Lele, Nila, Gurame" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Harga / Orang *</label>
+                <input type="number" id="newSpotPrice" value="${s.price}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Jumlah Slot</label>
+                <input type="number" id="newSpotSlots" value="${s.slots}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Jam Operasional</label>
+            <input type="text" id="newSpotOpen" value="${s.open}" placeholder="06:00 - 22:00" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Fasilitas (pisahkan dengan koma)</label>
+            <input type="text" id="newSpotFacilities" value="${facilitiesValue}" placeholder="Saung, Parkir, Kantin" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>
+            <textarea id="newSpotDesc" rows="3" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">${s.description || ''}</textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Latitude</label>
+                <input type="number" id="newSpotLat" step="0.0001" value="${s.lat || -6.2}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Longitude</label>
+                <input type="number" id="newSpotLng" step="0.0001" value="${s.lng || 106.8166}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Gambar URL (opsional)</label>
+            <input type="text" id="newSpotImage" value="${s.image && s.image.startsWith('http') ? s.image : ''}" placeholder="https://..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-5 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                    <p class="text-xs font-bold text-dark">Premium Listing ⭐</p>
+                    <p class="text-[10px] text-gray-500">Muncul di bagian atas pencarian</p>
+                </div>
+                <input type="checkbox" id="newSpotPremium" ${s.premium ? 'checked' : ''} class="w-5 h-5 accent-yellow-500">
+            </label>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="closeAddSpot()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">Batal</button>
+            <button onclick="updateSpot()" class="flex-1 bg-primary text-white py-3 rounded-xl font-bold">Simpan Perubahan</button>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    setTimeout(() => { content.style.transform = 'translateY(0)'; }, 10);
+}
+
+// SIMPAN PERUBAHAN SPOT (UPDATE)
+async function updateSpot() {
+    const spotId = parseInt(document.getElementById('editSpotId').value);
+    const idx = spots.findIndex(s => s.id === spotId);
+    if (idx < 0) return showToast('Spot tidak ditemukan', 'error');
+
+    const name = document.getElementById('newSpotName').value.trim();
+    const city = document.getElementById('newSpotCity').value.trim();
+    const fish = document.getElementById('newSpotFish').value.trim() || 'Lele';
+    const price = parseInt(document.getElementById('newSpotPrice').value);
+    const slots = parseInt(document.getElementById('newSpotSlots').value) || 0;
+    const open = document.getElementById('newSpotOpen').value.trim() || '06:00 - 22:00';
+    const facilities = document.getElementById('newSpotFacilities').value.split(',').map(x => x.trim()).filter(x => x);
+    const desc = document.getElementById('newSpotDesc').value.trim();
+    const lat = parseFloat(document.getElementById('newSpotLat').value) || -6.2;
+    const lng = parseFloat(document.getElementById('newSpotLng').value) || 106.8166;
+    const img = document.getElementById('newSpotImage').value.trim();
+    const premium = document.getElementById('newSpotPremium').checked;
+
+    if (!name || !city || !price || price <= 0) {
+        showToast('Nama, kota, dan harga wajib diisi (harga > 0)', 'error');
+        return;
+    }
+
+    const old = spots[idx];
+    const updated = {
+        ...old,
+        name, city, location: fish, price, slots, open,
+        facilities: facilities.length > 0 ? facilities : ["Parkir", "Toilet"],
+        description: desc || old.description,
+        lat, lng, premium,
+        image: img || old.image,
+        imageFallback: img || old.imageFallback
+    };
+    spots[idx] = updated;
+
+    try {
+        const FB = await waitForFirebase();
+        const q = FB.query(FB.collection(FB.db, 'spots'), FB.where('id', '==', spotId), FB.where('ownerId', '==', currentUser.uid));
+        const snap = await FB.getDocs(q);
+        if (!snap.empty) {
+            const docId = snap.docs[0].id;
+            const { firestoreId, ...toSave } = updated;
+            await FB.updateDoc(FB.doc(FB.db, 'spots', docId), toSave);
+        } else {
+            const { firestoreId, ...toSave } = updated;
+            await FB.addDoc(FB.collection(FB.db, 'spots'), { ...toSave, createdAt: FB.serverTimestamp() });
+        }
+        console.log('[spot] updated');
+    } catch (fbErr) {
+        console.error('[spot] update failed:', fbErr);
+        showToast('Gagal sync ke server, tapi tersimpan lokal', 'info');
+    }
+
+    save();
+    closeAddSpot();
+    showToast('Spot "' + name + '" berhasil diperbarui!');
+    setTimeout(() => openOwnerDashboard(), 400);
+}
+
+// HAPUS SPOT (OWNER)
+async function deleteOwnerSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+    if (s.ownerId !== currentUser.uid) return showToast('Bukan spot Anda', 'error');
+
+    if (!confirm(`Yakin hapus spot "${s.name}"?\n\nTindakan ini tidak bisa dibatalkan.`)) return;
+
+    try {
+        const FB = await waitForFirebase();
+        const q = FB.query(FB.collection(FB.db, 'spots'), FB.where('id', '==', spotId), FB.where('ownerId', '==', currentUser.uid));
+        const snap = await FB.getDocs(q);
+        for (const d of snap.docs) {
+            await FB.deleteDoc(FB.doc(FB.db, 'spots', d.id));
+        }
+        console.log('[spot] deleted');
+    } catch (fbErr) {
+        console.error('[spot] delete failed:', fbErr);
+        showToast('Gagal hapus dari server', 'error');
+        return;
+    }
+
+    spots = spots.filter(x => x.id !== spotId);
+    save();
+    showToast('Spot "' + s.name + '" dihapus', 'info');
+    setTimeout(() => openOwnerDashboard(), 400);
+}
+
+// PREVIEW SPOT (lihat sebagai pemancing)
+function previewSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+    closeOwner();
+
+    const modal = document.getElementById('detailModal');
+    const facilitiesHtml = (s.facilities || []).map(f => '<span class="bg-gray-100 text-gray-600 text-[10px] px-3 py-1 rounded-full whitespace-nowrap">' + f + '</span>').join('');
+
+    document.getElementById('detailContent').innerHTML = `
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        ${s.premium ? '<div class="inline-block bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-full mb-2">⭐ PREMIUM</div>' : ''}
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h3 class="text-xl font-bold text-dark">${s.name}</h3>
+                <p class="text-xs text-gray-500 mt-1">📍 ${s.city} • ${s.location}</p>
+                <p class="text-xs text-gray-500">👤 ${s.owner} • 🕒 ${s.open}</p>
+            </div>
+            <button onclick="closeDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+            <p class="text-[10px] text-primary font-bold">👁️ PREVIEW — Beginilah pemancing melihat spot Mas</p>
+        </div>
+        ${imgTag(s.image, s.imageFallback, s.name, "w-full h-48 object-cover rounded-2xl mb-4")}
+        <div class="flex space-x-2 mb-4 overflow-x-auto hide-scrollbar">${facilitiesHtml}</div>
+        <p class="text-xs text-gray-500 leading-relaxed mb-4">${s.description}</p>
+        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-6">
+            <span class="text-sm font-medium text-gray-600">Harga / Orang</span>
+            <p class="text-xl font-bold text-primary">Rp ${s.price.toLocaleString('id-ID')}</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-6">
+            <span class="text-sm font-medium text-gray-600">Slot Tersedia</span>
+            <p class="text-lg font-bold ${s.slots > 0 ? 'text-green-600' : 'text-red-600'}">${s.slots} slot</p>
+        </div>
+        <button onclick="closeDetail()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">Tutup Preview</button>
+    `;
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
 // konfirmasi booking
@@ -2394,24 +2656,26 @@ function openAddSpot() {
             <button onclick="closeAddSpot()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         <div class="mb-3">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Spot</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Spot *</label>
             <input type="text" id="newSpotName" placeholder="Contoh: Pemancingan Barokah" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
         </div>
         <div class="mb-3">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Kota</label>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Kota *</label>
             <input type="text" id="newSpotCity" placeholder="Contoh: Bekasi" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
         </div>
         <div class="mb-3">
             <label class="block text-xs font-medium text-gray-500 mb-1">Jenis Ikan (pisahkan dengan koma)</label>
             <input type="text" id="newSpotFish" placeholder="Lele, Nila, Gurame" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
         </div>
-        <div class="mb-3">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Harga per Orang</label>
-            <input type="number" id="newSpotPrice" placeholder="50000" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
-        </div>
-        <div class="mb-3">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Jumlah Slot</label>
-            <input type="number" id="newSpotSlots" placeholder="20" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Harga / Orang *</label>
+                <input type="number" id="newSpotPrice" placeholder="50000" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Jumlah Slot</label>
+                <input type="number" id="newSpotSlots" placeholder="20" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+            </div>
         </div>
         <div class="mb-3">
             <label class="block text-xs font-medium text-gray-500 mb-1">Jam Operasional</label>
@@ -2423,7 +2687,7 @@ function openAddSpot() {
         </div>
         <div class="mb-3">
             <label class="block text-xs font-medium text-gray-500 mb-1">Deskripsi</label>
-            <textarea id="newSpotDesc" rows="2" placeholder="Deskripsi singkat" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"></textarea>
+            <textarea id="newSpotDesc" rows="3" placeholder="Deskripsi singkat" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"></textarea>
         </div>
         <div class="grid grid-cols-2 gap-2 mb-3">
             <div>
@@ -2435,9 +2699,18 @@ function openAddSpot() {
                 <input type="number" id="newSpotLng" step="0.0001" value="106.8166" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
             </div>
         </div>
-        <div class="mb-5">
+        <div class="mb-3">
             <label class="block text-xs font-medium text-gray-500 mb-1">Gambar URL (opsional)</label>
             <input type="text" id="newSpotImage" placeholder="https://..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary">
+        </div>
+        <div class="mb-5 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <label class="flex items-center justify-between cursor-pointer">
+                <div>
+                    <p class="text-xs font-bold text-dark">Premium Listing ⭐</p>
+                    <p class="text-[10px] text-gray-500">Muncul di bagian atas pencarian</p>
+                </div>
+                <input type="checkbox" id="newSpotPremium" class="w-5 h-5 accent-yellow-500">
+            </label>
         </div>
         <div class="flex space-x-2">
             <button onclick="closeAddSpot()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">Batal</button>
@@ -2473,9 +2746,10 @@ async function saveNewSpot() {
     const lat = parseFloat(document.getElementById('newSpotLat').value) || -6.2;
     const lng = parseFloat(document.getElementById('newSpotLng').value) || 106.8166;
     const img = document.getElementById('newSpotImage').value.trim();
+    const premium = document.getElementById('newSpotPremium') ? document.getElementById('newSpotPremium').checked : false;
 
-    if (!name || !city || !price) {
-        showToast('Nama, kota, dan harga wajib diisi', 'error');
+    if (!name || !city || !price || price <= 0) {
+        showToast('Nama, kota, dan harga wajib diisi (harga > 0)', 'error');
         return;
     }
 
@@ -2489,7 +2763,7 @@ async function saveNewSpot() {
         description: desc,
         owner: currentUser ? currentUser.name : "Owner",
         ownerId: currentUser ? currentUser.uid : "owner1",
-        premium: false, distance: 5.0, open,
+        premium: premium, distance: 5.0, open,
         lat, lng
     };
 
@@ -2505,6 +2779,7 @@ async function saveNewSpot() {
             console.log('[spot] saved');
         } catch (fbErr) {
             console.error('[spot] save failed:', fbErr);
+            showToast('Gagal sync ke server, tapi tersimpan lokal', 'info');
         }
     }
 
@@ -2513,7 +2788,6 @@ async function saveNewSpot() {
     showToast('Spot "' + name + '" berhasil ditambahkan!');
     setTimeout(() => openOwnerDashboard(), 400);
 }
-
 // admin dashboard
 function renderAdminDashboard(container) {
     const totalRevenue = ownerBookings.filter(b => b.status === 'Confirmed').reduce((s, b) => s + b.total, 0);
