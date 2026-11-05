@@ -605,14 +605,13 @@ function switchTab(tabName) {
             const svg = btn.querySelector('svg');
             if (svg) { svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); }
         });
-        ['dashboard','spots','users','bookings'].forEach(tab => {
+               ['dashboard','spots','users','bookings','approvals'].forEach(tab => {
             const btn = document.getElementById('anav-' + tab);
             if (!btn) return;
             btn.className = "flex flex-col items-center text-gray-400";
             const svg = btn.querySelector('svg');
             if (svg) { svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); }
         });
-
         const content = document.getElementById('app-content');
         if (!content) return;
 
@@ -628,6 +627,7 @@ function switchTab(tabName) {
             else if (tabName === 'admin-spots') renderAdminSpots(content);
             else if (tabName === 'admin-users') renderAdminUsers(content);
             else if (tabName === 'admin-bookings') renderAdminBookings(content);
+            else if (tabName === 'admin-approvals') renderAdminApprovals(content);
             content.scrollTop = 0;
             return;
         }
@@ -3112,6 +3112,244 @@ function renderAdminBookings(container) {
         </div>
         <div class="px-5 mt-4 pb-4">${bookingsHtml || '<p class="text-center text-gray-400 text-sm py-10">Belum ada booking</p>'}</div>
     `;
+}
+
+// ==========================================
+// ADMIN — HALAMAN PENGAJUAN SPOT
+// ==========================================
+
+function renderAdminApprovals(container) {
+    const pending = spots.filter(s => s.status === 'pending');
+    const rejected = spots.filter(s => s.status === 'rejected');
+
+    // --- Render list pending ---
+    let pendingHtml = '';
+    if (pending.length === 0) {
+        pendingHtml = '<div class="text-center py-10">'
+            + '<p class="text-4xl mb-3">✅</p>'
+            + '<p class="text-sm text-gray-500">Tidak ada pengajuan menunggu</p>'
+            + '<p class="text-xs text-gray-400 mt-1">Semua pengajuan sudah diproses</p>'
+            + '</div>';
+    } else {
+        pending.forEach(s => {
+            pendingHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-3 shadow-sm">';
+            pendingHtml += '<div class="flex gap-3 mb-3">';
+            pendingHtml += imgTag(s.image, s.imageFallback, s.name, "w-16 h-16 object-cover rounded-xl");
+            pendingHtml += '<div class="flex-1 min-w-0">';
+            pendingHtml += '<div class="flex items-center gap-1 flex-wrap mb-0.5">';
+            pendingHtml += '<h4 class="text-sm font-bold text-dark truncate">' + s.name + '</h4>';
+            pendingHtml += '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">⏳ Baru</span>';
+            pendingHtml += '</div>';
+            pendingHtml += '<p class="text-[10px] text-gray-500">📍 ' + s.city + ' • ' + s.location + '</p>';
+            pendingHtml += '<p class="text-[10px] text-gray-500">👤 ' + (s.owner || '-') + '</p>';
+            pendingHtml += '<p class="text-xs font-bold text-primary mt-1">Rp ' + s.price.toLocaleString('id-ID') + '/orang</p>';
+            if (s.submittedAt) {
+                const d = new Date(s.submittedAt);
+                pendingHtml += '<p class="text-[9px] text-gray-400 mt-1">📅 Diajukan: ' + d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) + '</p>';
+            }
+            pendingHtml += '</div></div>';
+            // detail singkat
+            pendingHtml += '<div class="bg-gray-50 rounded-xl p-2 mb-2 text-[10px] text-gray-600">';
+            pendingHtml += '<p><b>Fasilitas:</b> ' + (s.facilities || []).join(', ') + '</p>';
+            pendingHtml += '<p class="mt-1"><b>Deskripsi:</b> ' + (s.description || '-') + '</p>';
+            if (s.lat && s.lng) {
+                pendingHtml += '<p class="mt-1"><b>Lokasi:</b> ' + s.lat + ', ' + s.lng + '</p>';
+            }
+            pendingHtml += '</div>';
+            // tombol aksi
+            pendingHtml += '<div class="flex gap-2">';
+            pendingHtml += '<button onclick="previewSpotAdmin(' + s.id + ')" class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-[10px] font-bold">👁️ Preview</button>';
+            pendingHtml += '<button onclick="approveSpot(' + s.id + ')" class="flex-1 bg-green-500 text-white py-2 rounded-lg text-[10px] font-bold">✅ Approve</button>';
+            pendingHtml += '<button onclick="rejectSpot(' + s.id + ')" class="flex-1 bg-red-500 text-white py-2 rounded-lg text-[10px] font-bold">❌ Reject</button>';
+            pendingHtml += '</div></div>';
+        });
+    }
+
+    // --- Render list rejected ---
+    let rejectedHtml = '';
+    if (rejected.length === 0) {
+        rejectedHtml = '<p class="text-center text-xs text-gray-400 py-4">Tidak ada spot ditolak</p>';
+    } else {
+        rejected.forEach(s => {
+            rejectedHtml += '<div class="bg-white border border-gray-100 rounded-2xl p-3 mb-2 shadow-sm">';
+            rejectedHtml += '<div class="flex gap-3">';
+            rejectedHtml += imgTag(s.image, s.imageFallback, s.name, "w-12 h-12 object-cover rounded-lg");
+            rejectedHtml += '<div class="flex-1 min-w-0">';
+            rejectedHtml += '<p class="text-xs font-bold text-dark truncate">' + s.name + '</p>';
+            rejectedHtml += '<p class="text-[10px] text-gray-500">📍 ' + s.city + ' • ' + (s.owner || '-') + '</p>';
+            if (s.rejectReason) {
+                rejectedHtml += '<p class="text-[10px] text-red-600 mt-1">❌ ' + s.rejectReason + '</p>';
+            }
+            rejectedHtml += '</div>';
+            rejectedHtml += '<button onclick="approveSpot(' + s.id + ')" class="bg-green-100 text-green-700 px-3 py-2 rounded-lg text-[10px] font-bold h-fit">Approve</button>';
+            rejectedHtml += '</div></div>';
+        });
+    }
+
+    // --- Update badge notifikasi ---
+    const badge = document.getElementById('approvalBadge');
+    if (badge) {
+        if (pending.length > 0) {
+            badge.textContent = pending.length;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    // --- Render halaman ---
+    container.innerHTML = `
+        <div class="px-5 pt-4 pb-3 bg-white">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold">Review Pengajuan Spot</h2>
+                <span class="text-xs text-gray-500">${pending.length} menunggu</span>
+            </div>
+        </div>
+        <div class="px-5 mt-4 pb-4">
+            <h3 class="font-bold text-sm text-dark mb-2 flex items-center gap-1">⏳ Menunggu Review (${pending.length})</h3>
+            ${pendingHtml}
+
+            ${rejected.length > 0 ? `<h3 class="font-bold text-sm text-dark mb-2 mt-6 flex items-center gap-1">❌ Ditolak (${rejected.length})</h3>${rejectedHtml}` : ''}
+
+            <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                <p class="text-[10px] text-blue-700"><b>ℹ️ Alur Review:</b></p>
+                <ol class="text-[10px] text-blue-600 list-decimal list-inside mt-1 space-y-0.5">
+                    <li>Preview spot untuk cek data</li>
+                    <li>Survei lapangan (di luar sistem)</li>
+                    <li>Klik Approve → spot tampil publik</li>
+                    <li>Klik Reject → owner dapat alasan</li>
+                </ol>
+            </div>
+        </div>
+    `;
+}
+
+// Approve spot
+async function approveSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+    if (!confirm('Approve spot "' + s.name + '"?\n\nSpot akan tampil ke publik setelah ini.')) return;
+
+    try {
+        const FB = await waitForFirebase();
+        const q = FB.query(FB.collection(FB.db, 'spots'), FB.where('id', '==', spotId));
+        const snap = await FB.getDocs(q);
+        if (!snap.empty) {
+            const docId = snap.docs[0].id;
+            await FB.updateDoc(FB.doc(FB.db, 'spots', docId), {
+                status: 'approved',
+                rejectReason: null,
+                approvedAt: new Date().toISOString(),
+                approvedBy: currentUser.uid
+            });
+        }
+    } catch (err) {
+        console.error('[admin] approve failed:', err);
+        showToast('Gagal approve spot', 'error');
+        return;
+    }
+
+    const idx = spots.findIndex(x => x.id === spotId);
+    if (idx >= 0) {
+        spots[idx].status = 'approved';
+        spots[idx].rejectReason = null;
+    }
+    save();
+    showToast('Spot "' + s.name + '" di-approve! Sekarang tampil publik.', 'success');
+    renderAdminApprovals(document.getElementById('app-content'));
+}
+
+// Reject spot (dengan alasan)
+async function rejectSpot(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+    const reason = prompt(
+        'Reject spot "' + s.name + '"\n\nMasukkan alasan penolakan (akan ditampilkan ke owner):',
+        'Lokasi tidak sesuai / Fasilitas kurang lengkap / Data tidak valid'
+    );
+    if (!reason || reason.trim() === '') {
+        showToast('Reject dibatalkan — alasan wajib diisi', 'info');
+        return;
+    }
+
+    try {
+        const FB = await waitForFirebase();
+        const q = FB.query(FB.collection(FB.db, 'spots'), FB.where('id', '==', spotId));
+        const snap = await FB.getDocs(q);
+        if (!snap.empty) {
+            const docId = snap.docs[0].id;
+            await FB.updateDoc(FB.doc(FB.db, 'spots', docId), {
+                status: 'rejected',
+                rejectReason: reason.trim(),
+                rejectedAt: new Date().toISOString(),
+                rejectedBy: currentUser.uid
+            });
+        }
+    } catch (err) {
+        console.error('[admin] reject failed:', err);
+        showToast('Gagal reject spot', 'error');
+        return;
+    }
+
+    const idx = spots.findIndex(x => x.id === spotId);
+    if (idx >= 0) {
+        spots[idx].status = 'rejected';
+        spots[idx].rejectReason = reason.trim();
+    }
+    save();
+    showToast('Spot "' + s.name + '" ditolak. Alasan terkirim ke owner.', 'info');
+    renderAdminApprovals(document.getElementById('app-content'));
+}
+
+// Preview spot dari sisi admin (tanpa harus login sebagai pemancing)
+function previewSpotAdmin(spotId) {
+    const s = spots.find(x => x.id === spotId);
+    if (!s) return;
+
+    const modal = document.getElementById('detailModal');
+    const facilitiesHtml = (s.facilities || []).map(f =>
+        '<span class="bg-gray-100 text-gray-600 text-[10px] px-3 py-1 rounded-full whitespace-nowrap">' + f + '</span>'
+    ).join('');
+
+    document.getElementById('detailContent').innerHTML = `
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h3 class="text-xl font-bold text-dark">${s.name}</h3>
+                <p class="text-xs text-gray-500 mt-1">📍 ${s.city} • ${s.location}</p>
+                <p class="text-xs text-gray-500">👤 ${s.owner} • 🕒 ${s.open}</p>
+            </div>
+            <button onclick="closeDetail()" class="text-gray-400 bg-gray-100 p-2 rounded-full"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <p class="text-[10px] text-yellow-700 font-bold">👁️ PREVIEW ADMIN — Spot masih ${s.status || 'pending'}</p>
+        </div>
+        ${imgTag(s.image, s.imageFallback, s.name, "w-full h-48 object-cover rounded-2xl mb-4")}
+        <button onclick="closeDetail();openSpotMap(${s.id})" class="w-full bg-green-50 text-green-700 py-3 rounded-xl font-bold text-sm mb-4 flex items-center justify-center gap-2">📍 Lihat Lokasi di Peta</button>
+        <div class="flex space-x-2 mb-4 overflow-x-auto hide-scrollbar">${facilitiesHtml}</div>
+        <p class="text-xs text-gray-500 leading-relaxed mb-4">${s.description}</p>
+        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-3">
+            <span class="text-sm font-medium text-gray-600">Harga / Orang</span>
+            <p class="text-xl font-bold text-primary">Rp ${s.price.toLocaleString('id-ID')}</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-xl flex justify-between items-center mb-3">
+            <span class="text-sm font-medium text-gray-600">Slot Tersedia</span>
+            <p class="text-lg font-bold ${s.slots > 0 ? 'text-green-600' : 'text-red-600'}">${s.slots} slot</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-xl mb-4">
+            <p class="text-xs text-gray-500 mb-1"><b>Info Owner:</b></p>
+            <p class="text-xs text-gray-600">Nama: ${s.owner}</p>
+            <p class="text-xs text-gray-600">Owner ID: ${s.ownerId || '-'}</p>
+            <p class="text-xs text-gray-600">Koordinat: ${s.lat || '-'}, ${s.lng || '-'}</p>
+            ${s.submittedAt ? `<p class="text-xs text-gray-600">Diajukan: ${new Date(s.submittedAt).toLocaleString('id-ID')}</p>` : ''}
+        </div>
+        <div class="flex gap-2">
+            <button onclick="closeDetail();approveSpot(${s.id})" class="flex-1 bg-green-500 text-white py-3 rounded-xl font-bold">✅ Approve</button>
+            <button onclick="closeDetail();rejectSpot(${s.id})" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold">❌ Reject</button>
+        </div>
+    `;
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('show'), 10);
 }
 
 // about
