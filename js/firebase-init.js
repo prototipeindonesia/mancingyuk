@@ -31,12 +31,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBlAfIdidxvZjl9DxkXMcdyQaBVS19CPac",
-    authDomain: "mancingyukapp.firebaseapp.com",
-    projectId: "mancingyukapp",
-    storageBucket: "mancingyukapp.firebasestorage.app",
-    messagingSenderId: "403557606873",
-    appId: "1:403557606873:web:bebe8944d792b93b12a5c8"
+    apiKey: "AIzaSyB9PmYeF70sCTe8wWu9BHatFNYPjdE1Zd4",
+    authDomain: "mancingyuk-5c56d.firebaseapp.com",
+    projectId: "mancingyuk-5c56d",
+    storageBucket: "mancingyuk-5c56d.firebasestorage.app",
+    messagingSenderId: "585479494777",
+    appId: "1:585479494777:web:d259ae9d22fe4b50b948a8"
+
 };
 
 const app = initializeApp(firebaseConfig);
