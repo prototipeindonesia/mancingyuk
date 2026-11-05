@@ -8,14 +8,15 @@
 /* ==========================================
    BOTTOM SHEET MODALS (transform animation)
    ========================================== */
-#detailModal.show, 
-#notifModal.show, 
+#detailModal.show,
+#notifModal.show,
 #ticketDetailModal.show,
-#eventModal.show, 
-#ownerSpotModal.show, 
+#eventModal.show,
+#ownerSpotModal.show,
 #catchLogModal.show,
-#partnerModal.show { 
-    display: block; 
+#partnerModal.show,
+#addSpotModal.show {
+    display: block;
 }
 
 #detailModal.show #detailContent,
@@ -24,48 +25,29 @@
 #eventModal.show #eventContent,
 #ownerSpotModal.show #ownerSpotContent,
 #catchLogModal.show #catchLogContent,
-#partnerModal.show #partnerContent { 
-    transform: translateY(0); 
+#partnerModal.show #partnerContent,
+#addSpotModal.show #addSpotContent {
+    transform: translateY(0);
 }
 
 
 /* ==========================================
    ANIMATIONS
    ========================================== */
-@keyframes fadeIn { 
-    from { opacity: 0; transform: scale(0.95); } 
-    to { opacity: 1; transform: scale(1); } 
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-@keyframes slideIn { 
-    from { opacity: 0; transform: translateY(-20px); } 
-    to { opacity: 1; transform: translateY(0); } 
-}
-.animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
-
-@keyframes heartPop { 
-    0% { transform: scale(1); } 
-    50% { transform: scale(1.4); } 
-    100% { transform: scale(1); } 
-}
-.heart-pop { animation: heartPop 0.3s ease-out; }
-
-@keyframes float { 
-    0%, 100% { transform: translateY(0); } 
-    50% { transform: translateY(-8px); } 
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 .float-anim { animation: float 3s ease-in-out infinite; }
 
-@keyframes pulse-glow { 
-    0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 
-    50% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); } 
-}
-.pulse-glow { animation: pulse-glow 2s infinite; }
-
-@keyframes chatIn { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
+@keyframes chatIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 .chat-in { animation: chatIn 0.3s ease-out; }
 
@@ -73,9 +55,9 @@
 /* ==========================================
    BODY BASE
    ========================================== */
-body { 
-    overflow: hidden; 
-    transition: background 0.3s; 
+body {
+    overflow: hidden;
+    transition: background 0.3s;
 }
 
 /* Phone Frame default transition */
@@ -115,7 +97,6 @@ body {
     box-shadow: 0 3px 14px rgba(0,0,0,0.1) !important;
 }
 
-/* Marker custom color */
 .leaflet-marker-icon {
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
@@ -162,18 +143,6 @@ body {
 
 
 /* ==========================================
-   PARTNER PRODUCT CARDS (Home Widget)
-   ========================================== */
-.partner-product-card {
-    transition: transform 0.2s ease-out, box-shadow 0.2s;
-}
-
-.partner-product-card:active {
-    transform: scale(0.97);
-}
-
-
-/* ==========================================
    DARK MODE
    ========================================== */
 body.dark-mode { background: #0f172a; }
@@ -182,8 +151,8 @@ body.dark-mode #phoneFrame { background: #1e293b !important; }
 
 body.dark-mode header,
 body.dark-mode nav,
-body.dark-mode .bg-white { 
-    background: #1e293b !important; 
+body.dark-mode .bg-white {
+    background: #1e293b !important;
 }
 
 body.dark-mode .bg-gray-50 { background: #0f172a !important; }
@@ -203,8 +172,8 @@ body.dark-mode .text-gray-400 { color: #64748b !important; }
 body.dark-mode .text-gray-700 { color: #e2e8f0 !important; }
 
 body.dark-mode .border-gray-100,
-body.dark-mode .border-gray-200 { 
-    border-color: #334155 !important; 
+body.dark-mode .border-gray-200 {
+    border-color: #334155 !important;
 }
 
 body.dark-mode .divide-gray-100 > * + * {
@@ -221,7 +190,7 @@ body.dark-mode .bg-yellow-50 { background: #422006 !important; }
 
 body.dark-mode .bg-red-50 { background: #450a0a !important; }
 
-body.dark-mode .bg-purple-50 { background: #2e1065 !important; }
+body.dark-mode .bg-purple-50 { background: #3b0764 !important; }
 
 /* Dark mode untuk bottom sheet modals */
 body.dark-mode #detailContent,
@@ -231,15 +200,15 @@ body.dark-mode #eventContent,
 body.dark-mode #ownerSpotContent,
 body.dark-mode #catchLogContent,
 body.dark-mode #partnerContent,
-body.dark-mode #addSpotContent { 
-    background: #1e293b !important; 
+body.dark-mode #addSpotContent {
+    background: #1e293b !important;
 }
 
 /* Dark mode untuk chat */
 body.dark-mode #chatModal { background: #0f172a !important; }
 
-body.dark-mode #chatMessages .bg-white { 
-    background: #334155 !important; 
+body.dark-mode #chatMessages .bg-white {
+    background: #334155 !important;
     color: #f1f5f9 !important;
 }
 
@@ -258,7 +227,7 @@ body.dark-mode #ticketsPage { background: #0f172a !important; }
 body.dark-mode #ticketsPageContent { background: #0f172a !important; }
 
 /* Dark mode untuk Admin Nav */
-body.dark-mode #adminNav { 
+body.dark-mode #adminNav {
     background: #0a0f1a !important;
     border-top: 1px solid #1e293b;
 }
@@ -299,30 +268,30 @@ body.dark-mode .toast {
 /* ==========================================
    TOAST CONTAINER
    ========================================== */
-#toastContainer { 
-    position: absolute; 
-    top: 0; 
-    left: 0; 
-    right: 0; 
-    z-index: 200; 
-    pointer-events: none; 
-    padding: 0 16px; 
+#toastContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    pointer-events: none;
+    padding: 0 16px;
 }
 
-.toast { 
-    pointer-events: auto; 
-    margin-top: 60px; 
-    background: #1e293b; 
-    color: white; 
-    padding: 12px 16px; 
-    border-radius: 12px; 
-    font-size: 13px; 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3); 
-    animation: slideIn 0.3s ease-out; 
-    margin-bottom: 8px; 
+.toast {
+    pointer-events: auto;
+    margin-top: 60px;
+    background: #1e293b;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease-out;
+    margin-bottom: 8px;
 }
 
 .toast.success { background: #22c55e; }
@@ -335,8 +304,8 @@ body.dark-mode .toast {
 /* ==========================================
    STAR RATING (Review Modal)
    ========================================== */
-#starRating button { 
-    transition: transform 0.15s; 
+#starRating button {
+    transition: transform 0.15s;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -365,7 +334,9 @@ body.dark-mode .toast {
 #catchLogContent::-webkit-scrollbar,
 #partnerContent::-webkit-scrollbar,
 #addSpotContent::-webkit-scrollbar,
-#ticketsPageContent::-webkit-scrollbar {
+#ticketsPageContent::-webkit-scrollbar,
+#ticketDetailContent::-webkit-scrollbar,
+#eventContent::-webkit-scrollbar {
     width: 4px;
 }
 
@@ -375,7 +346,9 @@ body.dark-mode .toast {
 #catchLogContent::-webkit-scrollbar-thumb,
 #partnerContent::-webkit-scrollbar-thumb,
 #addSpotContent::-webkit-scrollbar-thumb,
-#ticketsPageContent::-webkit-scrollbar-thumb {
+#ticketsPageContent::-webkit-scrollbar-thumb,
+#ticketDetailContent::-webkit-scrollbar-thumb,
+#eventContent::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
 }
@@ -386,7 +359,9 @@ body.dark-mode #ownerSpotContent::-webkit-scrollbar-thumb,
 body.dark-mode #catchLogContent::-webkit-scrollbar-thumb,
 body.dark-mode #partnerContent::-webkit-scrollbar-thumb,
 body.dark-mode #addSpotContent::-webkit-scrollbar-thumb,
-body.dark-mode #ticketsPageContent::-webkit-scrollbar-thumb {
+body.dark-mode #ticketsPageContent::-webkit-scrollbar-thumb,
+body.dark-mode #ticketDetailContent::-webkit-scrollbar-thumb,
+body.dark-mode #eventContent::-webkit-scrollbar-thumb {
     background: #475569;
 }
 
@@ -438,30 +413,16 @@ button.bg-secondary:hover:not(:disabled) {
 
 
 /* ==========================================
-   LOADING / SKELETON (opsional)
-   ========================================== */
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-}
-
-@keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-body.dark-mode .skeleton {
-    background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
-    background-size: 200% 100%;
-}
-
-
-/* ==========================================
    PRINT (opsional — untuk E-Tiket)
    ========================================== */
 @media print {
-    #bottomNav, #adminNav, header, .no-print {
+    #bottomNav,
+    #adminNav,
+    header,
+    .no-print,
+    #addSpotModal,
+    #detailModal,
+    #checkoutModal {
         display: none !important;
     }
     #ticketDetailModal {
